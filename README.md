@@ -1,6 +1,40 @@
 # Shanti_2025
 Repository for IGVC 2025
 
+## Clone a Repository with Submodules
+If you clone this repository, you'll need to initialize the submodules after cloning:
+
+Clone the main repository:
+```bash
+git clone <main-repo-url>
+```
+
+Navigate into the repository:
+```bash
+cd <repository-name>
+```
+
+Initialize and update the submodules:
+```bash
+git submodule update --init --recursive
+```
+
+## Update Submodules
+If you've already cloned the repository and want to update the submodules to the latest commit:
+```bash
+git submodule update --recursive --remote
+```
+
+To update a specific submodule:
+```bash
+cd <submodule-directory>
+git pull origin <branch>
+cd ..
+git add <submodule-directory>
+git commit -m "Update submodule to latest commit"
+git push
+```
+
 ## Localization
 This section contains the modules and tools related to the localization of the robot, which allows it to determine its position in the environment.
 
