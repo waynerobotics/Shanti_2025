@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!-- ****************************************************************
+  Author: You
+  File: test launch
+  Description: Test file, feel free to delete and add nodes needed for your PR
+**************************************************************** -->
+<launch>
+  <!-- Arguments -->
+  <arg name="twist_topic" default="turtle1/cmd_vel" description="Topic name for turtle velocity commands"/>
+  <arg name="linear_scale" default="2.0" description="Scaling factor for linear velocity"/>
+  <arg name="angular_scale" default="2.0" description="Scaling factor for angular velocity"/>
+  <arg name="bag_path" default="$(env HOME)/rosbags/controllerIn" description="Path to the rosbag file"/>
+
+  <!-- Joy2Twist Node -->
+  <node pkg="joystick2base" 
+        exec="joy2twist" 
+        name="joy2twist" 
+        output="screen">
+    <param name="twist_topic" value="$(var twist_topic)"/>
+    <param name="linear_scale" value="$(var linear_scale)"/>
+    <param name="angular_scale" value="$(var angular_scale)"/>
+  </node>
+
+  <!-- Turtlesim Node -->
+  <node pkg="turtlesim"
+        exec="turtlesim_node"
+        name="turtlesim"/>
+
+  <!-- RQT Graph Node -->
+  <node pkg="rqt_graph"
+        exec="rqt_graph"
+        name="rqt_graph"/>
+
+  <!-- ROS Bag Play -->
+  <executable cmd="ros2 bag play $(var bag_path) --loop" output="screen"/>
+
+</launch>
