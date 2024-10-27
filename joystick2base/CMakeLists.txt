@@ -15,15 +15,15 @@ find_package(sensor_msgs REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
-add_executable(joy2turtle src/joy2turtle.cpp)
-target_include_directories(joy2turtle PUBLIC
+add_executable(joy2twist src/joy2twist.cpp)
+target_include_directories(joy2twist PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
-target_compile_features(joy2turtle PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+target_compile_features(joy2twist PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
-ament_target_dependencies(joy2turtle rclcpp geometry_msgs sensor_msgs) 
+ament_target_dependencies(joy2twist rclcpp geometry_msgs sensor_msgs) 
 
-install(TARGETS joy2turtle
+install(TARGETS joy2twist
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
