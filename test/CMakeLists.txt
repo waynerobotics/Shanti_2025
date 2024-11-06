@@ -14,7 +14,6 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
-find_package(sensor_msgs REQUIRED)
 
 # Uncomment if you add executables later
 # add_executable(your_node src/your_node.cpp)
@@ -56,7 +55,6 @@ install(DIRECTORY
 ament_export_dependencies(
   rclcpp
   geometry_msgs
-  sensor_msgs
 )
 
 # Uncomment if you create libraries
