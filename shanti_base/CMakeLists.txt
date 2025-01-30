@@ -37,6 +37,8 @@ find_package(sensor_msgs REQUIRED)
 # Install launch files
 install(DIRECTORY
   launch
+  src
+  rviz
   DESTINATION share/${PROJECT_NAME}
 )
 
