@@ -11,9 +11,9 @@ def generate_launch_description():
     default_rviz_config_path = os.path.join(pkg_share, 'rviz/urdf_config.rviz')
 
     # Find Gazebo files
-    gazebo_share = '/opt/ros/foxy/share/gazebo_ros'
-    gzclient_launch_path = os.path.join(gazebo_share, '/opt/ros/foxy/share/gazebo_ros/launch/gzclient.launch.py')
-    gzserver_launch_path = os.path.join(gazebo_share, '/opt/ros/foxy/share/gazebo_ros/launch/gzserver.launch.py')
+    gazebo_share = '/opt/ros/humble/share/gazebo_ros'
+    gzclient_launch_path = os.path.join(gazebo_share, '/opt/ros/humble/share/gazebo_ros/launch/gzclient.launch.py')
+    gzserver_launch_path = os.path.join(gazebo_share, '/opt/ros/humble/share/gazebo_ros/launch/gzserver.launch.py')
 
     gzclient_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(gzclient_launch_path)
@@ -22,7 +22,7 @@ def generate_launch_description():
     gzserver_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(gzserver_launch_path),
         launch_arguments={
-            'world': '/home/cares/ros2_ws/src/Shanti_2025/simulation/worlds/map1.world',
+            'world': '/home/shanti/shanti2025/src/Shanti_2025/simulation/worlds/map10.world',
         }.items()
     )
 
