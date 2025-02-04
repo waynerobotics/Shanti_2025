@@ -1,7 +1,7 @@
 # ROS 2 specific files and directories
-/install/
-/build/
-/log/
+install/
+build/
+log/
 
 # Colcon specific
 .colcon/
