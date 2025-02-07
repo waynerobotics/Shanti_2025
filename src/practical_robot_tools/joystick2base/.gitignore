@@ -1,0 +1,55 @@
+# ROS 2 specific files and directories
+/install/
+/build/
+/log/
+
+# Colcon specific
+.colcon/
+.colcon_cache/
+
+# CMake and build system
+CMakeFiles/
+/CMakeCache.txt
+Makefile
+cmake_install.cmake
+compile_commands.json
+
+# IDE or editor-specific files
+.vscode/
+.vim/
+/.idea/
+/*.swp
+*.swo
+*~
+
+# Binary files
+*.out
+*.o
+*.so
+*.a
+
+# ROS bag files
+*.bag
+*.bag.active
+*.orig.bag
+
+# Python specific files
+__pycache__/
+*.py[cod]
+
+# Other miscellaneous
+*.log
+*.db
+*.sql
+*.sqlite
+
+# Temporary files
+*.tmp
+*.bak
+*.old
+*.save
+*.backup
+
+# System-specific files
+.DS_Store
+Thumbs.db
