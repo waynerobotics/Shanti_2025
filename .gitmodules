@@ -1,3 +1,6 @@
 [submodule "practical_robot_tools/joystick_control"]
 	path = practical_robot_tools/joystick_control
 	url = git@github.com:waynerobotics/joystick_control.git
+[submodule "practical_robot_tools/Web_UI"]
+	path = practical_robot_tools/Web_UI
+	url = git@github.com:waynerobotics/Web_UI.git
