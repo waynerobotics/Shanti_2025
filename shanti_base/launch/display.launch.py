@@ -77,7 +77,6 @@ def generate_launch_description():
         arguments=['-entity', 'shanti', '-topic', 'robot_description'],
         output='screen'
     )
-
     joy_node = launch_ros.actions.Node(
         package='joy',
         executable='joy_node'
@@ -104,14 +103,14 @@ def generate_launch_description():
                                             description='Absolute path to rviz config file'),
         launch.actions.ExecuteProcess(cmd=['gazebo', '--verbose', '-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so'], output='screen'),
 
+        gzclient_launch,
+        gzserver_launch,
         joint_state_publisher_node,
         #joint_state_publisher_gui_node,
         robot_state_publisher_node,
-        gzclient_launch,
-        gzserver_launch,
         spawn_entity,
-        joy_node,
-        joy2twist_node,
+        #joy_node,
+        #joy2twist_node,
         rviz_node
     ])
         
