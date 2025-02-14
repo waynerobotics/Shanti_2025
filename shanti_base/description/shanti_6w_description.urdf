@@ -103,8 +103,12 @@
     </joint>
   </xacro:macro>
 
-  <xacro:wheel prefix="drivewhl_l" x_reflect="-1" y_reflect="1" />
-  <xacro:wheel prefix="drivewhl_r" x_reflect="-1" y_reflect="-1" />
+  <xacro:wheel prefix="drivewhl_l1" x_reflect="-1" y_reflect="1" />
+  <xacro:wheel prefix="drivewhl_l2" x_reflect="0" y_reflect="1" />
+  <xacro:wheel prefix="drivewhl_l3" x_reflect="1" y_reflect="1" />
+  <xacro:wheel prefix="drivewhl_r1" x_reflect="-1" y_reflect="-1" />
+  <xacro:wheel prefix="drivewhl_r2" x_reflect="0" y_reflect="-1" />
+  <xacro:wheel prefix="drivewhl_r3" x_reflect="1" y_reflect="-1" />
 
   <!-- Caster Wheel -->
   <link name="front_caster">
