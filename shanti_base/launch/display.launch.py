@@ -19,7 +19,7 @@ def generate_launch_description():
 
     #get the urdf model file
     pkg_share = launch_ros.substitutions.FindPackageShare(package='shanti_base').find('shanti_base')
-    default_model_path = os.path.join(pkg_share, 'src/description/shanti_description.urdf')
+    default_model_path = os.path.join(pkg_share, 'src/description/shanti_6w_description.urdf')
     default_rviz_config_path = os.path.join(pkg_share, 'rviz/urdf_config.rviz')
     print (default_model_path)
     # Find Gazebo files
@@ -48,6 +48,7 @@ def generate_launch_description():
         package='robot_state_publisher',
         executable='robot_state_publisher',
         parameters=[{'robot_description': Command(['xacro ', LaunchConfiguration('model')])}]
+        # parameters = [{'robot_description': LaunchConfiguration('model')}]
     )
     joint_state_publisher_node = launch_ros.actions.Node(
         package='joint_state_publisher',
