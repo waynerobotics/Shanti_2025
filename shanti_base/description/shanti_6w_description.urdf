@@ -316,7 +316,7 @@
   <gazebo>
     <plugin name='diff_drive' filename='libgazebo_ros_diff_drive.so'>
       <ros>
-        <namespace>/demo</namespace>
+        <namespace>/diff_drive/center</namespace>
       </ros>
 
       <!-- wheels -->
@@ -344,7 +344,7 @@
   <gazebo>
     <plugin name='diff_drive' filename='libgazebo_ros_diff_drive.so'>
       <ros>
-        <namespace>/demo</namespace>
+        <namespace>/diff_drive/front</namespace>
       </ros>
 
       <!-- wheels -->
@@ -372,7 +372,7 @@
   <gazebo>
     <plugin name='diff_drive' filename='libgazebo_ros_diff_drive.so'>
       <ros>
-        <namespace>/demo</namespace>
+        <namespace>/diff_drive/back</namespace>
       </ros>
 
       <!-- wheels -->
