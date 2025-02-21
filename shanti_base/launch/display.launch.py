@@ -94,6 +94,11 @@ def generate_launch_description():
         ] 
     )
 
+    localization_node = launch_ros.actions.Node(
+        package='localization',
+        executable='localization_node'
+    )
+
 
     return launch.LaunchDescription([
         #launch.actions.DeclareLaunchArgument(name='gui', default_value='True',
@@ -112,6 +117,7 @@ def generate_launch_description():
         spawn_entity,
         joy_node,
         joy2twist_node,
-        rviz_node
+        rviz_node,
+        localization_node
     ])
         
