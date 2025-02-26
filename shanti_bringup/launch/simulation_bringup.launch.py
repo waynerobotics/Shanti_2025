@@ -94,11 +94,18 @@ def generate_launch_description():
         ] 
     )
 
+    #this node take odom, gps and imu nodes and outputs it in utm coordinates
     localization_node = launch_ros.actions.Node(
         package='localization',
         executable='localization_node'
     )
-
+    
+    #this node relays the /demo/cmd_vel to all the wheels
+    relay_cmd_vel = launch_ros.actions.Node(
+        package='simulation',
+        executable='simulation_node'
+    )
+        
 
     return launch.LaunchDescription([
         #launch.actions.DeclareLaunchArgument(name='gui', default_value='True',
@@ -118,6 +125,8 @@ def generate_launch_description():
         joy_node,
         joy2twist_node,
         rviz_node,
-        localization_node
-    ])
+        localization_node,
+        relay_cmd_vel
+        ])
+    
         
