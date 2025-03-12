@@ -125,7 +125,7 @@ def generate_launch_description():
         joy_node,
         joy2twist_node,
         rviz_node,
-        localization_node,
+        #localization_node,
         relay_cmd_vel
         ])
     
