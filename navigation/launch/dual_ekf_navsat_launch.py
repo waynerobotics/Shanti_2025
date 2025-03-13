@@ -25,6 +25,7 @@ def generate_launch_description():
         "navigation")
     rl_params_file = os.path.join(
         gps_wpf_dir, "config", "dual_ekf_navsat_params.yaml")
+    print(rl_params_file)
 
     return LaunchDescription(
         [
@@ -40,7 +41,7 @@ def generate_launch_description():
                 name="ekf_filter_node_odom",
                 output="screen",
                 parameters=[rl_params_file, {"use_sim_time": True}],
-                remappings=[("odometry/filtered", "odometry/local")],
+                remappings=[("odometry/filtered", "/demo/odom")],
             ),
             launch_ros.actions.Node(
                 package="robot_localization",
@@ -48,7 +49,7 @@ def generate_launch_description():
                 name="ekf_filter_node_map",
                 output="screen",
                 parameters=[rl_params_file, {"use_sim_time": True}],
-                remappings=[("odometry/filtered", "odometry/global")],
+                remappings=[("odometry/filtered", "demo/odom")],
             ),
             launch_ros.actions.Node(
                 package="robot_localization",
@@ -57,11 +58,11 @@ def generate_launch_description():
                 output="screen",
                 parameters=[rl_params_file, {"use_sim_time": True}],
                 remappings=[
-                    ("imu/data", "imu/data"),
+                    ("imu/data", "demo/imu"),
                     ("gps/fix", "gps/fix"),
                     ("gps/filtered", "gps/filtered"),
                     ("odometry/gps", "odometry/gps"),
-                    ("odometry/filtered", "odometry/global"),
+                    ("odometry/filtered", "/diff_drive/center/odom"),
                 ],
             ),
         ]
