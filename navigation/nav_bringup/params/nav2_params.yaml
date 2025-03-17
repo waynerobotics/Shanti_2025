@@ -1,0 +1,19 @@
+/**:
+  ros__parameters:
+    # Global parameters
+    use_sim_time: False
+    robot_base_frame: "base_link"
+    global_frame: "map"
+    robot_radius: 0.3
+    transform_tolerance: 0.2
+
+    # Include component parameters
+    controller_server: 
+      ros__parameters:
+        !include controller_server.yaml
+    planner_server: 
+      ros__parameters:
+        !include planner_server.yaml
+    waypoint_follower: 
+      ros__parameters:
+        !include waypoint_follower.yaml
