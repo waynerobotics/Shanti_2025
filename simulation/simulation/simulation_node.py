@@ -3,22 +3,25 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
+from geometry_msgs.msg import Twist
 
-class SimulationNode(Node):
+class CmdVelRelay(Node):
     def __init__(self):
-        super().__init__('simulation_node')
-        self.publisher_ = self.create_publisher(String, 'simulation_topic', 10)
-        self.timer = self.create_timer(1.0, self.publish_message)
-    
-    def publish_message(self):
-        msg = String()
-        msg.data = "Simulation is running..."
-        self.get_logger().info(msg.data)
-        self.publisher_.publish(msg)
+        super().__init__('cmd_vel_relay')
+        self.subscription = self.create_subscription(
+            Twist, '/demo/cmd_vel', self.cmd_vel_callback, 10)
+        self.pub_front = self.create_publisher(Twist, '/diff_drive/front/cmd_vel', 10)
+        self.pub_back = self.create_publisher(Twist, '/diff_drive/back/cmd_vel', 10)
+        self.pub_center = self.create_publisher(Twist, '/diff_drive/center/cmd_vel', 10)
 
-def main():
-    rclpy.init()
-    node = SimulationNode()
+    def cmd_vel_callback(self, msg):
+        self.pub_front.publish(msg)
+        self.pub_back.publish(msg)
+        self.pub_center.publish(msg)
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = CmdVelRelay()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
