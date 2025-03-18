@@ -7,44 +7,56 @@ controller_server:
     progress_checker_plugin: "progress_checker"
     goal_checker_plugin: "goal_checker"
     controller_plugins: ["FollowPath"]
-    
+
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
-      # Required critics configuration
-      critics: ["GoalDist", "PathDist", "PathAlign", "ObstacleDist", "PreferForward"]
-      
-      # Critic parameters
-      GoalDist:
+      debug_trajectory_details: False
+      prune_plan: True
+      transform_tolerance: 0.1
+      critics: ["GoalAlign", "PathAlign", "PathDist", "ObstacleDist", "GoalDist", "PreferForward"]
+
+      # Critic configurations
+      GoalAlign:
+        enabled: True
         scale: 5.0
-      PathDist:
-        scale: 32.0
         max_vel_x: 0.5
-        max_vel_y: 0.0
+        
       PathAlign:
+        enabled: True
         scale: 32.0
         max_vel_x: 0.5
-        max_vel_y: 0.0
         path_distance: 0.5
         lookahead_time: 1.5
+        
+      PathDist:
+        enabled: True
+        scale: 32.0
+        max_vel_x: 0.5
+        
       ObstacleDist:
+        enabled: True
         scale: 0.7
-        summation_type: 1  # (0 = sum, 1 = product)
+        summation_type: 1
         collision_cost: 100.0
         scale_radius: 5.0
+        
+      GoalDist:
+        enabled: True
+        scale: 5.0
+        
       PreferForward:
+        enabled: True
         scale: 25.0
         penalty: 0.5
         max_vel_x: 0.5
 
-      # Original DWB parameters
-      desired_linear_vel: 0.5
-      max_linear_vel: 0.8
-      min_linear_vel: 0.1
+      # DWB core parameters
+      sim_time: 1.7
       linear_acc_lim: 2.5
       linear_decel_lim: 2.5
       angular_acc_lim: 3.2
+      max_linear_vel: 0.8
+      min_linear_vel: 0.1
       max_angular_vel: 1.0
       min_angular_vel: 0.4
-      sim_time: 1.7
-      use_dwa: false
-      debug_trajectory_details: false
+      use_dwa: False

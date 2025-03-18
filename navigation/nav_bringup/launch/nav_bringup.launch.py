@@ -14,7 +14,7 @@ def generate_launch_description():
     params_file = LaunchConfiguration('params_file')
     declare_params_file_cmd = DeclareLaunchArgument(
         'params_file',
-        default_value=os.path.join(pkg_dir, 'config', 'nav2_params.yaml'),
+        default_value=os.path.join(pkg_dir, 'params', 'nav2_params.yaml'),
         description='Full path to the ROS2 parameters file to use')
 
     return LaunchDescription([
