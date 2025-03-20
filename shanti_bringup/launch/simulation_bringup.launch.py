@@ -42,6 +42,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(gzserver_launch_path),
         launch_arguments={
             'world': worldfile,
+            'pause' : 'true'
         }.items()
     )
     robot_state_publisher_node = launch_ros.actions.Node(
@@ -75,9 +76,22 @@ def generate_launch_description():
     spawn_entity = launch_ros.actions.Node(
         package='gazebo_ros',
         executable='spawn_entity.py',
-        arguments=['-entity', 'shanti', '-topic', 'robot_description'],
+        arguments=[
+            '-entity', 'shanti',
+            '-topic', 'robot_description',
+            '-x', '0', '-y', '0', '-z', '3',  # Position (x, y, z)
+            '-R', '0.0', '-P', '0.0', '-Y', '0'   # Orientation (roll, pitch, yaw) in radians
+        ],
         output='screen'
-    )
+    )   
+
+    
+    # spawn_entity = launch_ros.actions.Node(
+    #     package='gazebo_ros',
+    #     executable='spawn_entity.py',
+    #     arguments=['-entity', 'shanti', '-topic', 'robot_description'],
+    #     output='screen'
+    # )
     joy_node = launch_ros.actions.Node(
         package='joy',
         executable='joy_node'
@@ -123,7 +137,7 @@ def generate_launch_description():
         robot_state_publisher_node,
         spawn_entity,
         joy_node,
-        joy2twist_node,
+        # joy2twist_node,
         rviz_node,
         #localization_node,
         relay_cmd_vel

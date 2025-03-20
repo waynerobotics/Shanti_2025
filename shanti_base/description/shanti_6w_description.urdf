@@ -9,7 +9,7 @@
   <xacro:property name="wheel_radius" value="0.1016" />
   <xacro:property name="wheel_width" value="0.0762" />
   <xacro:property name="wheel_ygap" value="0.025" />
-  <xacro:property name="wheel_zoff" value="0.05" />
+  <xacro:property name="wheel_zoff" value="0.3" />
   <xacro:property name="wheel_xoff" value="0.2921" />
   <xacro:property name="caster_xoff" value="0.14" />
   <xacro:property name="lidar_radius" value="0.05" />
@@ -53,6 +53,7 @@
         <color rgba="0 1.0 1.0 1.0" />
       </material>
     </visual>
+    <xacro:box_inertia m="0.1" w="${base_width}" d="${base_length}" h="${base_height}" />
   </link>
 
   <!-- Robot Footprint -->
@@ -101,7 +102,7 @@
   <xacro:wheel prefix="drivewhl_r2" x_reflect="0" y_reflect="-1" />
   <xacro:wheel prefix="drivewhl_r3" x_reflect="1" y_reflect="-1" />
 
-  <!-- Caster Wheel -->
+  <!-- Caster Wheel 
   <link name="front_caster">
     <visual>
       <geometry>
@@ -126,7 +127,7 @@
     <child link="front_caster" />
     <origin xyz="${caster_xoff} 0.0 ${-(base_height/2)}" rpy="0 0 0" />
   </joint>
-
+-->
 
   <!-- IMU Sensor -->
   <link name="imu_link">
