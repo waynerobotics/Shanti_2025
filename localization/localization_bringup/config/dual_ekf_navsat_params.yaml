@@ -41,7 +41,13 @@ ekf_filter_node_map:
     base_link_frame: base_link
     
     # Input: NavSat-transformed GPS
+    odom0: /odometry/navsat    # Input: NavSat-transformed GPS
     odom0: /odometry/navsat
+    odom0_config: [true, true, false,  # X,Y position
+                   false, false, false,
+                   false, false, false,
+                   false, false, false,
+                   false, false, false]
     odom0_config: [true, true, false,  # X,Y position
                    false, false, false,
                    false, false, false,
@@ -82,4 +88,4 @@ navsat_transform:
     publish_filtered_gps: true
     use_odometry_yaw: true  # Critical for orientation
     wait_for_datum: true
-    datum: [47.397742, 8.545594, 0.0]  # ETH Zurich example
+    datum: [38.1614789, -122.454630, 0.0]  # ETH Zurich example
