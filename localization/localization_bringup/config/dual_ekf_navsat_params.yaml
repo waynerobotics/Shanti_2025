@@ -33,6 +33,16 @@ ekf_filter_node_odom:
       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3]
+
+    twist0: /demo/cmd_vel
+    twist0_config: [false, false, false, # x, y, z pos
+                    false, false, false, # roll, pitch, yaw pos
+                    true,  false,  false, # x, y, z, vel
+                    false, false, true, # roll, pitch, yaw vel
+                    false, false, false] # ax, ay, az
+    twist0_queue_size: 3
+    twist0_rejection_threshold: 2.0
+
 ekf_filter_node_map:
   ros__parameters:
     frequency: 50.0
@@ -41,20 +51,25 @@ ekf_filter_node_map:
     base_link_frame: base_link
     
     # Input: NavSat-transformed GPS
-    odom0: /odometry/navsat
+    odom0: /odometry/navsat    # Input: NavSat-transformed GPS
     odom0_config: [true, true, false,  # X,Y position
                    false, false, false,
                    false, false, false,
                    false, false, false,
                    false, false, false]
-    
+    odom1: /odometry/odom    # Input: NavSat-transformed GPS
+    odom1_config: [true, true, false,  # X,Y position
+                   false, false, true,
+                   true, false, false,
+                   false, false, true,
+                   false, false, false]
     # IMU for orientation
-    imu0: /demo/imu
-    imu0_config: [false, false, false,
-                  true, true, true,  # Roll, Pitch, Yaw
-                  false, false, false,
-                  false, false, false,
-                  false, false, false]
+    # imu0: /demo/imu
+    # imu0_config: [false, false, false,
+    #               true, true, true,  # Roll, Pitch, Yaw
+    #               false, false, false,
+    #               false, false, false,
+    #               false, false, false]
     process_noise_covariance: [0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1e-3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
@@ -82,4 +97,4 @@ navsat_transform:
     publish_filtered_gps: true
     use_odometry_yaw: true  # Critical for orientation
     wait_for_datum: true
-    datum: [47.397742, 8.545594, 0.0]  # ETH Zurich example
+    datum: [38.1614789, -122.454630, 0.0]  # ETH Zurich example
