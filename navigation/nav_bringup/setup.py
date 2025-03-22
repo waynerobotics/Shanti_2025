@@ -2,7 +2,7 @@ import os
 from setuptools import find_packages, setup
 import glob as glob
 
-package_name = 'localization_bringup'
+package_name = 'nav_bringup'
 
 setup(
     name=package_name,
@@ -13,12 +13,12 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'launch'), glob.glob('launch/*.launch.py')),
-        (os.path.join('share', package_name, 'config'), glob.glob('config/*.yaml')),
+        (os.path.join('share', package_name, 'params'), glob.glob('params/*.yaml')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='shanti',
-    maintainer_email='blaine.oania@gmail.com',
+    maintainer='blaine',
+    maintainer_email='Blaine.Oania@gmail.com',
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],

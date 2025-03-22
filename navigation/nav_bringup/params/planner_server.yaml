@@ -1,0 +1,8 @@
+expected_planner_frequency: 20.0
+planner_plugins: ["GridBased"]
+
+GridBased:
+  interpolation_resolution: 0.1
+  tolerance: 0.5
+  allow_unknown: true
+  use_final_approach_orientation: false

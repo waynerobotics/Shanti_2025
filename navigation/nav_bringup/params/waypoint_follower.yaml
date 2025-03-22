@@ -1,0 +1,6 @@
+loop_rate: 20.0
+waypoint_task_executor_plugin: "wait_at_waypoint"
+stop_on_failure: false
+wait_at_waypoint:
+  enabled: True
+  wait_duration: 0.0  # Seconds to wait at each waypoint

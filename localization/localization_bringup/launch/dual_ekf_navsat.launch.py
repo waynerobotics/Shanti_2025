@@ -22,7 +22,7 @@ import launch.actions
 
 def generate_launch_description():
     gps_wpf_dir = get_package_share_directory(
-        "navigation")
+        "localization_bringup")
     rl_params_file = os.path.join(
         gps_wpf_dir, "config", "dual_ekf_navsat_params.yaml")
     print(rl_params_file)
@@ -37,11 +37,30 @@ def generate_launch_description():
             ),
             launch_ros.actions.Node(
                 package="robot_localization",
+                executable="navsat_transform_node",
+                name="navsat_transform",
+                output="screen",
+                parameters=[rl_params_file, {"use_sim_time": True}],
+                remappings=[
+                    ("/imu/data", "/demo/imu"),#(prefixed name, new name)
+                    ("/gps/fix", "/gps/fix"),
+                    ("/odometry/gps", "/odometry/navsat"),
+                    ("/gps/filtered", "/gps/filtered"),
+                    ('/odometry/filtered', '/diff_drive/center/odom'),
+                ],
+            ),
+            launch_ros.actions.Node(
+                package='tf2_ros',
+                executable='static_transform_publisher',
+                arguments=['0','0','0','0','0','0','utm','map']
+            ),
+            launch_ros.actions.Node(
+                package="robot_localization",
                 executable="ekf_node",
                 name="ekf_filter_node_odom",
                 output="screen",
                 parameters=[rl_params_file, {"use_sim_time": True}],
-                remappings=[("odometry/filtered", "/odometry/filtered_odom")],
+                remappings=[("odometry/filtered", "/odometry/odom")],
             ),
             launch_ros.actions.Node(
                 package="robot_localization",
@@ -49,21 +68,7 @@ def generate_launch_description():
                 name="ekf_filter_node_map",
                 output="screen",
                 parameters=[rl_params_file, {"use_sim_time": True}],
-                remappings=[("odometry/filtered", "/odometry/filtered_map")]
-            ),
-            launch_ros.actions.Node(
-                package="robot_localization",
-                executable="navsat_transform_node",
-                name="navsat_transform",
-                output="screen",
-                parameters=[rl_params_file, {"use_sim_time": True}],
-                remappings=[
-                    ("imu/data", "demo/imu"),#(prefixed name, new name)
-                    ("gps/fix", "gps/fix"),
-                    ("odometry/gps", "/odometry/gps"),
-                    ("gps/filtered", "gps/filtered"),
-                    ("odometry/filtered", "odometry/filtered_map"),
-                ],
+                remappings=[("odometry/filtered", "/odometry/map")]
             ),
         ]
     )
