@@ -46,7 +46,7 @@ def generate_launch_description():
                     ("/gps/fix", "/gps/fix"),
                     ("/odometry/gps", "/odometry/navsat"),
                     ("/gps/filtered", "/gps/filtered"),
-                    ('/odometry/filtered', '/diff_drive/center/odom'),
+                    ('/odometry/filtered', '/odometry/map'),
                 ],
             ),
             launch_ros.actions.Node(
