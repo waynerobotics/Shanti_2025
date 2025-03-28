@@ -42,7 +42,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(gzserver_launch_path),
         launch_arguments={
             'world': worldfile,
-            'pause' : 'true'
+            # 'pause' : 'true'
         }.items()
     )
     robot_state_publisher_node = launch_ros.actions.Node(
@@ -137,7 +137,7 @@ def generate_launch_description():
         robot_state_publisher_node,
         spawn_entity,
         joy_node,
-        # joy2twist_node,
+        joy2twist_node,
         rviz_node,
         #localization_node,
         relay_cmd_vel
