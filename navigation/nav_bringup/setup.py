@@ -24,6 +24,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'waypoint_publisher = nav_bringup.waypoint_publisher:main',
         ],
     },
 )
