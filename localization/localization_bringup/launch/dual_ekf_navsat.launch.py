@@ -49,10 +49,13 @@ def generate_launch_description():
                     ('/odometry/filtered', '/odometry/map'),
                 ],
             ),
+            # Use the dynamic UTM to map transform publisher instead of static transform
             launch_ros.actions.Node(
-                package='tf2_ros',
-                executable='static_transform_publisher',
-                arguments=['0','0','0','0','0','0','utm','map']
+                package="localization_bringup",
+                executable="utm_map_transform_publisher",
+                name="utm_map_transform_publisher",
+                output="screen",
+                parameters=[{"use_sim_time": True}],  # Pass use_sim_time here
             ),
             launch_ros.actions.Node(
                 package="robot_localization",

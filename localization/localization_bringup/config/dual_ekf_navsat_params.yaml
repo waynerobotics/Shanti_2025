@@ -101,7 +101,7 @@ navsat_transform:
     magnetic_declination_radians: 0.0  # Set for your location
     yaw_offset: 0.0
     zero_altitude: true
-    broadcast_utm_transform: false  # Let EKF handle this
+    broadcast_cartesian_transform: false  # Let EKF handle this
     publish_filtered_gps: true
     use_odometry_yaw: true  # Critical for orientation
     wait_for_datum: true
