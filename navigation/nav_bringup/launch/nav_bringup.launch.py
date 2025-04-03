@@ -23,16 +23,6 @@ def generate_launch_description():
         default_value=nav2_params_path,
         description='Full path to the ROS2 parameters file to use')
     
-    # Define explicit costmap parameters to override YAML settings
-    costmap_params = {
-        'local_costmap.static_layer.enabled': False,
-        'local_costmap.plugins': ['obstacle_layer', 'inflation_layer'],
-        'local_costmap.rolling_window': True,
-        'global_costmap.static_layer.enabled': False,
-        'global_costmap.plugins': ['obstacle_layer', 'inflation_layer'],
-        'global_costmap.rolling_window': True,
-    }
-
     return LaunchDescription([
         declare_params_file_cmd,
         
@@ -45,9 +35,9 @@ def generate_launch_description():
             executable='controller_server',
             name='controller_server',
             output='screen',
-            parameters=[nav2_params_path, costmap_params],  # Add costmap overrides
+            parameters=[nav2_params_path],
             remappings=[
-                ('/cmd_vel', '/cmd_vel_relay'),
+                ('/cmd_vel', '/demo/cmd_vel'),
                 ('/odom', '/odometry/map'),
             ]
         ),
@@ -58,7 +48,16 @@ def generate_launch_description():
             executable='planner_server',
             name='planner_server',
             output='screen',
-            parameters=[nav2_params_path, costmap_params],  # Add costmap overrides
+            parameters=[nav2_params_path],
+        ),
+
+        # Nav2 Recoveries Server (required by BT Navigator)
+        Node(
+            package='nav2_recoveries',
+            executable='recoveries_server',
+            name='recoveries_server',
+            output='screen',
+            parameters=[nav2_params_path],
         ),
 
         # Nav2 Waypoint Follower
@@ -67,30 +66,39 @@ def generate_launch_description():
             executable='waypoint_follower',
             name='waypoint_follower',
             output='screen',
-            parameters=[nav2_params_path, {'waypoint_follower.loop_rate': 20.0}],  # Ensure loop_rate is a float
+            parameters=[nav2_params_path],
         ),
 
-        # Lifecycle Manager
+        # BT Navigator
+        Node(
+            package='nav2_bt_navigator',
+            executable='bt_navigator',
+            name='bt_navigator',
+            output='screen',
+            parameters=[nav2_params_path],
+            remappings=[
+                ('/tf', 'tf'),
+                ('/tf_static', 'tf_static')
+            ]
+        ),
+
+        # Lifecycle Manager - Add all required nodes including recoveries_server
         Node(
             package='nav2_lifecycle_manager',
             executable='lifecycle_manager',
             name='lifecycle_manager_navigation',
             output='screen',
-            parameters=[{'use_sim_time': False},
-                        {'autostart': True},
-                        {'node_names': [
-                            'controller_server',
-                            'planner_server',
-                            'waypoint_follower'
-                        ]}]
-        ),
-
-        # Waypoint Publisher
-        Node(
-            package='nav_bringup',
-            executable='waypoint_publisher',
-            name='waypoint_publisher',
-            output='screen'
+            parameters=[
+                {'use_sim_time': False},
+                {'autostart': True},
+                {'node_names': [
+                    'controller_server',
+                    'planner_server',
+                    'recoveries_server',
+                    'bt_navigator',
+                    'waypoint_follower',
+                ]},
+            ]
         ),
 
         # Include GPS Localization
@@ -98,5 +106,15 @@ def generate_launch_description():
             PythonLaunchDescriptionSource(
                 os.path.join(get_package_share_directory('localization_bringup'), 'launch', 'dual_ekf_navsat.launch.py')
             )
+        ),
+
+        # Waypoint Publisher - launched with a delay to ensure waypoint follower is active
+        Node(
+            package='nav_bringup',
+            executable='waypoint_publisher',
+            name='waypoint_publisher',
+            output='screen',
+            # Add a delay before launching to ensure waypoint follower is fully active
+            prefix=['bash -c "sleep 10.0 && exec $0 $@"'],
         ),
     ])

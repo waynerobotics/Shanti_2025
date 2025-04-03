@@ -102,31 +102,6 @@
   <xacro:wheel prefix="drivewhl_r2" x_reflect="0" y_reflect="-1" />
   <xacro:wheel prefix="drivewhl_r3" x_reflect="1" y_reflect="-1" />
 
-  <!-- Caster Wheel  -->
-  <link name="front_caster">
-    <visual>
-      <geometry>
-        <sphere radius="${(wheel_radius+wheel_zoff-(base_height/2))}" />
-      </geometry>
-      <material name="Cyan">
-        <color rgba="0 1.0 1.0 1.0" />
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <sphere radius="${(wheel_radius+wheel_zoff-(base_height/2))}" />
-      </geometry>
-    </collision>
-
-    <xacro:sphere_inertia m="0.5" r="${(wheel_radius+wheel_zoff-(base_height/2))}" />
-  </link>
-
-  <joint name="caster_joint" type="fixed">
-    <parent link="base_link" />
-    <child link="front_caster" />
-    <origin xyz="${caster_xoff} 0.0 ${-(base_height/2)}" rpy="0 0 0" />
-  </joint>
 
   <!-- IMU Sensor -->
   <link name="imu_link">
