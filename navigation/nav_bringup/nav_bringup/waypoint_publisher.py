@@ -18,7 +18,7 @@ class WaypointPublisher(Node):
         super().__init__('waypoint_publisher')
 
         # Create an action client for the waypoint follower
-        self.action_client = ActionClient(self, FollowWaypoints, 'FollowWaypoints')
+        self.action_client = ActionClient(self, FollowWaypoints, 'follow_waypoints')
         
         # Declare parameters
         self.declare_parameter('waypoints_file', 'gps_waypoints.yaml')
