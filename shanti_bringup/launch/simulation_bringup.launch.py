@@ -17,7 +17,14 @@ def generate_launch_description():
     ros_distro = os.getenv('ROS_DISTRO', 'foxy')
     print(ros_distro)
 
-    #get the urdf model file
+    # Parameter for teleoperation
+    teleop_arg = launch.actions.DeclareLaunchArgument(
+        'teleop',
+        default_value='False',
+        description='Flag to enable teleoperation'
+    )
+
+    # get the urdf model file
     pkg_share = launch_ros.substitutions.FindPackageShare(package='shanti_base').find('shanti_base')
     default_model_path = os.path.join(pkg_share, 'description/shanti_6w_description.urdf')
     default_rviz_config_path = os.path.join(pkg_share, 'rviz/urdf_config.rviz')
@@ -42,7 +49,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(gzserver_launch_path),
         launch_arguments={
             'world': worldfile,
-            'pause' : 'true'
+            # 'pause' : 'true'
         }.items()
     )
     robot_state_publisher_node = launch_ros.actions.Node(
@@ -92,12 +99,14 @@ def generate_launch_description():
     #     arguments=['-entity', 'shanti', '-topic', 'robot_description'],
     #     output='screen'
     # )
+    # Launch joystick node conditionally based on teleop parameter
     joy_node = launch_ros.actions.Node(
         package='joy',
-        executable='joy_node'
+        executable='joy_node',
+        condition=launch.conditions.IfCondition(LaunchConfiguration('teleop'))
     )
 
-    # Launch joystick axis to twist message conversion node
+    # Launch joystick axis to twist message conversion node conditionally
     joy2twist_node = launch_ros.actions.Node(
         package='joystick2base',
         executable='joy2twist',
@@ -105,7 +114,8 @@ def generate_launch_description():
         # Remap to Gazebo diff drive topic
         remappings=[
             ('/turtle1/cmd_vel', '/demo/cmd_vel')
-        ] 
+        ],
+        condition=launch.conditions.IfCondition(LaunchConfiguration('teleop'))
     )
 
     #this node take odom, gps and imu nodes and outputs it in utm coordinates
@@ -122,12 +132,13 @@ def generate_launch_description():
         
 
     return launch.LaunchDescription([
-        #launch.actions.DeclareLaunchArgument(name='gui', default_value='True',
-        #                                    description='Flag to enable joint_state_publisher_gui'),
+        launch.actions.DeclareLaunchArgument(name='gui', default_value='True',
+                                           description='Flag to enable joint_state_publisher_gui'),
         launch.actions.DeclareLaunchArgument(name='model', default_value=default_model_path,
                                             description='Absolute path to robot urdf file'),
         launch.actions.DeclareLaunchArgument(name='rvizconfig', default_value=default_rviz_config_path,
                                             description='Absolute path to rviz config file'),
+        teleop_arg,
 #        launch.actions.ExecuteProcess(cmd=['gazebo', '--verbose', '-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so'], output='screen'),
 
         gzclient_launch,
@@ -137,10 +148,10 @@ def generate_launch_description():
         robot_state_publisher_node,
         spawn_entity,
         joy_node,
-        # joy2twist_node,
+        joy2twist_node,
         rviz_node,
         #localization_node,
         relay_cmd_vel
         ])
-    
-        
+
+
