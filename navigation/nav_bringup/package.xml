@@ -7,6 +7,14 @@
   <maintainer email="Blaine.Oania@gmail.com">blaine</maintainer>
   <license>TODO: License declaration</license>
 
+  <depend>nav2_bt_navigator</depend>
+  <depend>nav2_core</depend>
+  <depend>nav2_behaviors</depend>
+  <depend>nav2_controller</depend>
+  <depend>nav2_planner</depend>
+  <depend>nav2_costmap_2d</depend>
+  <depend>nav2_waypoint_follower</depend>
+
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
