@@ -24,6 +24,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'utm_map_transform_publisher = localization_bringup.utm_map_transform_publisher:main',
         ],
     },
 )
