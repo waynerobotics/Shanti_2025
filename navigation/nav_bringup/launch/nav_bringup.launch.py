@@ -69,7 +69,8 @@ def generate_launch_description():
             parameters=[nav2_params_path],
             remappings=[
                 ('/tf', 'tf'),
-                ('/tf_static', 'tf_static')
+                ('/tf_static', 'tf_static'),
+                ('/odom', '/odometry/map'),
             ]
         ),
 
@@ -80,6 +81,9 @@ def generate_launch_description():
             name='behavior_server',
             output='screen',
             parameters=[nav2_params_path],
+            remappings=[
+                ('/cmd_vel', '/demo/cmd_vel'),
+            ]
         ),
 
         # Lifecycle Manager
