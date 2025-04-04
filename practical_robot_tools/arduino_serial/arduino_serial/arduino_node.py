@@ -73,7 +73,8 @@ def main(args=None):
     except KeyboardInterrupt:
         node.get_logger().info("Exiting...")
     finally:
-        node.ser.close()
+        if hasattr(node, 'ser'):
+            node.ser.close()
         node.destroy_node()
         rclpy.shutdown()
 
