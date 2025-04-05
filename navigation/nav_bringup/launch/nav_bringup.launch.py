@@ -51,15 +51,6 @@ def generate_launch_description():
             parameters=[nav2_params_path],
         ),
 
-        # Nav2 Recoveries Server (required by BT Navigator)
-        Node(
-            package='nav2_recoveries',
-            executable='recoveries_server',
-            name='recoveries_server',
-            output='screen',
-            parameters=[nav2_params_path],
-        ),
-
         # Nav2 Waypoint Follower
         Node(
             package='nav2_waypoint_follower',
@@ -82,7 +73,16 @@ def generate_launch_description():
             ]
         ),
 
-        # Lifecycle Manager - Add all required nodes including recoveries_server
+        # Nav2 Behavior Server
+        Node(
+            package='nav2_behaviors',
+            executable='behavior_server',
+            name='behavior_server',
+            output='screen',
+            parameters=[nav2_params_path],
+        ),
+
+        # Lifecycle Manager
         Node(
             package='nav2_lifecycle_manager',
             executable='lifecycle_manager',
@@ -94,9 +94,9 @@ def generate_launch_description():
                 {'node_names': [
                     'controller_server',
                     'planner_server',
-                    'recoveries_server',
                     'bt_navigator',
                     'waypoint_follower',
+                    'behavior_server',  # Changed from recovery_server to behavior_server
                 ]},
             ]
         ),
