@@ -25,6 +25,9 @@ setup(
     entry_points={
         'console_scripts': [
             'utm_map_transform_publisher = localization_bringup.utm_map_transform_publisher:main',
+            'gps_map_transformer = localization_bringup.gps_map_transformer:main',
+            'custom_lifecycle_manager = localization_bringup.custom_lifecycle_manager:main',
+            'odometry_rebroadcaster = localization_bringup.odometry_rebroadcaster:main',
         ],
     },
 )

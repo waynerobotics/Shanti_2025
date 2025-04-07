@@ -47,13 +47,13 @@ ekf_filter_node_map:
     base_link_frame: base_link
     publish_tf: true
 
-    odom0: /odometry/gps  # GPS data transformed into world (map) frame
+    odom0: /odometry/gps_map  # GPS data transformed into world (map) frame
     odom0_config: [true, true, false,  # Fuse X, Y position
                    false, false, false,  # Don't fuse orientation (handled by odom)
                    false, false, false,  # Fuse X, Y velocity (if GPS provides it)
                    false, false, false]
     odom0_pose_rejection_threshold: 3.0  # Meters
-    odom0_twist_rejection_threshold: 1.0  # m/s
+    odom0_twist_rejection_threshold: 1.0  # m/s 
 
     # IMU (angular velocity only)
     imu0: /demo/imu
@@ -61,7 +61,7 @@ ekf_filter_node_map:
                   false, false, true,
                   false, false, false,
                   false, false, false,
-                  true, true, false]
+                  false, false, false]
 
     # Simplified process noise
     process_noise_covariance: [

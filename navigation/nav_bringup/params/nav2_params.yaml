@@ -1,10 +1,10 @@
 amcl:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
 
 bt_navigator:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     plugin: "nav2_bt_navigator/BtNavigator"
     bt_xml_filename: ""
     default_bt_xml_filename: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_w_replanning_and_recovery.xml"
@@ -44,8 +44,8 @@ bt_navigator:
 
 controller_server:
   ros__parameters:
-    use_sim_time: false
-    controller_frequency: 50.0  # Increased from 5.0 to improve responsiveness
+    use_sim_time: true
+    controller_frequency: 20.0  # Increased from 5.0 to improve responsiveness
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.001
     min_theta_velocity_threshold: 0.001
@@ -62,17 +62,17 @@ controller_server:
     goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
       xy_goal_tolerance: 1.0 # Reduced from 1.0 to be more precise
-      yaw_goal_tolerance: 3.14  # Reduced from 3.14 to prevent excessive rotation
+      yaw_goal_tolerance: 6.28 # Reduced from 3.14 to prevent excessive rotation
       stateful: true  # Changed to true to maintain goal checking state
     
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
-      debug_trajectory_details: false
-      min_vel_x: 0.0
+      debug_trajectory_details: true
+      min_vel_x: -0.1
       min_vel_y: 0.0
       max_vel_x: 2.0
       max_vel_y: 0.0
-      max_vel_theta: 1.0  # Reduced from 2.0 to prevent aggressive rotation
+      max_vel_theta: 2.0  # Reduced from 2.0 to prevent aggressive rotation
       min_speed_xy: 0.0
       max_speed_xy: 2.0
       min_speed_theta: 0.0
@@ -97,12 +97,12 @@ controller_server:
         scale: 5.0  # Increased from 1.0 to favor goal alignment
         forward_point_distance: 0.5  # Increased from 0.325 to look further ahead
       PathAlign:
-        scale: 5.0  # Increased from 1.0 to strongly favor path following
-        forward_point_distance: 0.5  # Increased from 0.325 to look further ahead
+        scale: 10.0  # Increased from 1.0 to strongly favor path following
+        forward_point_distance: 0.325  # Increased from 0.325 to look further ahead
       GoalDist:
-        scale: 1.0  # Reduced from 2.0 to balance with other critics
+        scale: 10.0  # Reduced from 2.0 to balance with other critics
       PathDist:
-        scale: 5.0  # Reduced from 32.0 to be more reasonable while still maintaining path following
+        scale: 40.0  # Reduced from 32.0 to be more reasonable while still maintaining path following
 
 local_costmap:
   local_costmap:
@@ -111,7 +111,7 @@ local_costmap:
       publish_frequency: 2.0
       global_frame: odom
       robot_base_frame: base_link
-      use_sim_time: false
+      use_sim_time: true
       rolling_window: true
       width: 20
       height: 20
@@ -152,7 +152,7 @@ global_costmap:
       publish_frequency: 1.0
       global_frame: map
       robot_base_frame: base_link
-      use_sim_time: false
+      use_sim_time: true
       robot_radius: 0.22
       resolution: 0.05
       rolling_window: true
@@ -188,8 +188,8 @@ global_costmap:
 
 planner_server:
   ros__parameters:
-    expected_planner_frequency: 50.0
-    use_sim_time: false
+    expected_planner_frequency: 20.0
+    use_sim_time: true
     planner_plugins: ["GridBased"]
     
     GridBased:
@@ -202,17 +202,17 @@ waypoint_follower:
   ros__parameters:
     loop_rate: 20
     stop_on_failure: false
-    use_sim_time: false
+    use_sim_time: true
     waypoint_task_executor_plugin: "wait_at_waypoint"
     
     wait_at_waypoint:
       plugin: "nav2_waypoint_follower::WaitAtWaypoint"
       enabled: false
-      wait_duration: 1.0  # Restored to original value
+      wait_duration: 0  # Restored to original value
 
 behavior_server:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     costmap_topic: local_costmap/costmap_raw
     footprint_topic: local_costmap/published_footprint
     cycle_frequency: 10.0
