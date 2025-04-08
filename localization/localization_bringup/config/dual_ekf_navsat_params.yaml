@@ -1,108 +1,99 @@
 ekf_filter_node_odom:
   ros__parameters:
     frequency: 50.0
-    world_frame: odom  # Local frame
-    odom_frame: odom
+    world_frame: odom                # Local frame for odometry
+    odom_frame: odom                 # Must match navsat_transform's odom_frame
     base_link_frame: base_link
-    
-    # Wheel odometry
-    odom0: /diff_drive/center/odom
-    odom0_config: [true, true, false,  # X,Y position
-                   false, false, true,  # Yaw
-                   true, true, false,  # X,Y velocity
-                   false, false, true]  # Yaw rate
-    
-    # IMU for angular velocity
-    imu0: /demo/imu
-    imu0_config: [false, false, false,
-                  false, false, false,
-                  false, false, false,
-                  false, false, true,
-                  true, true, false] 
+    publish_tf: true
 
-    process_noise_covariance: [0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1e-3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1e-3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3]
- 
-    twist0: /demo/cmd_vel
-    twist0_config: [false, false, false, # x, y, z pos
-                    false, false, false, # roll, pitch, yaw pos
-                    true,  true,  false, # x, y, z, vel
-                    false, false, true, # roll, pitch, yaw vel
-                    false, false, false] # ax, ay, az
-    twist0_queue_size: 3
-    twist0_rejection_threshold: 2.0
+    # Wheel odometry (input)
+    odom0: /diff_drive/center/odom
+    odom0_config: [true, true, false,  # X, Y position
+                   false, false, true,  # Yaw orientation
+                   true, true, false,  # X, Y linear velocity
+                   false, false, true]  # Yaw angular velocity
+
+    # IMU (angular velocity only)
+    imu0: /demo/imu
+    imu0_config: [false, false, false,  # Disable linear acceleration
+                  false, false, false,  # Disable orientation
+                  false, false, false,
+                  true, true, true]     # Fuse angular velocity (roll, pitch, yaw rates)
+
+    # Simplified process noise covariance (diagonal values only)
+    process_noise_covariance: [
+      0.05, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  # X position
+      0.0, 0.05, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  # Y position
+      0.0, 0.0, 0.06, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  # Z position
+      0.0, 0.0, 0.0, 0.03, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   # Roll
+      0.0, 0.0, 0.0, 0.0, 0.03, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   # Pitch
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   # Yaw
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,    # X velocity
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,    # Y velocity
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,    # Z velocity
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05, 0.0, 0.0, 0.0, 0.0, 0.0,   # Roll rate
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05, 0.0, 0.0, 0.0, 0.0,   # Pitch rate
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05, 0.0, 0.0, 0.0,   # Yaw rate
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0,    # X acceleration
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0,    # Y acceleration
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1     # Z acceleration
+    ]
 
 ekf_filter_node_map:
   ros__parameters:
-    frequency: 50.0
-    world_frame: map  # UTM frame
+    frequency: 10.0                   # Lower frequency for global corrections
+    world_frame: map                  # Global frame
     odom_frame: odom
     base_link_frame: base_link
-    
-    # Input: NavSat-transformed GPS
-    odom0: /odometry/navsat    # Input: NavSat-transformed GPS
-    odom0_config: [true, true, false,  # X,Y position
-                   false, false, false,
-                   true, true, false,
-                   false, false, false,
-                   false, false, false]
-    odom0_pose_rejection_threshold: 5.0  # Reject GPS poses with large deviations
-    odom0_twist_rejection_threshold: 1.0  # Reject GPS velocities with large deviations
+    publish_tf: true
 
-    odom1: /odometry/odom    # Input: NavSat-transformed GPS
-    odom1_config: [true, true, false,  # X,Y position
-                   false, false, true,
-                   true, true, false,
-                   false, false, true,
+    odom0: /odometry/gps_map  # GPS data transformed into world (map) frame
+    odom0_config: [true, true, false,  # Fuse X, Y position
+                   false, false, false,  # Don't fuse orientation (handled by odom)
+                   false, false, false,  # Fuse X, Y velocity (if GPS provides it)
                    false, false, false]
-    odom1_pose_rejection_threshold: 2.0  # Reject odometry poses with large deviations
-    odom1_twist_rejection_threshold: 0.5  # Reject odometry velocities with large deviations
+    odom0_pose_rejection_threshold: 3.0  # Meters
+    odom0_twist_rejection_threshold: 1.0  # m/s 
 
-    #IMU for orientation
-    # imu0: /demo/imu
-    # imu0_config: [false, false, false,
-    #               true, true, true,  # Roll, Pitch, Yaw
-    #               true, true, false,
-    #               false, false, false,
-    #               false, false, false]
-    process_noise_covariance: [0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1e-4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1e-3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3]
+    # IMU (angular velocity only)
+    imu0: /demo/imu
+    imu0_config: [false, false, false,
+                  false, false, true,
+                  false, false, false,
+                  false, false, false,
+                  false, false, false]
+
+    # Simplified process noise
+    process_noise_covariance: [
+      0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   # X position (GPS noise)
+      0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   # Y position
+      0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   # Z position
+      0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  # Roll
+      0.0, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  # Pitch
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  # Yaw
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,    # X velocity
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,    # Y velocity
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,    # Z velocity
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05, 0.0, 0.0, 0.0, 0.0, 0.0,   # Roll rate
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05, 0.0, 0.0, 0.0, 0.0,   # Pitch rate
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05, 0.0, 0.0, 0.0,   # Yaw rate
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0,    # X acceleration
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0,    # Y acceleration
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1     # Z acceleration
+    ]
+
 navsat_transform:
   ros__parameters:
-    base_link_frame_output: base_link
-    frequency: 50.0
+    frequency: 51.0
     delay: 0.0
-    magnetic_declination_radians: 0.0  # Set for your location
-    yaw_offset: 0.0
-    zero_altitude: true
-    broadcast_cartesian_transform: false  # Let EKF handle this
+    magnetic_declination_radians: 0.0  # Set for your location (e.g., 0.2 for Zurich)
+    yaw_offset: 0.0                    # Adjust if IMU/GPS axes are misaligned
+    zero_altitude: true                 # Assume 2D navigation
+    broadcast_cartesian_transform: false
     publish_filtered_gps: true
-    use_odometry_yaw: true  # Critical for orientation
-    wait_for_datum: true
-    datum: [38.1614789, -122.454630, 0.0]  # ETH Zurich example
+    use_odometry_yaw: true              # Critical for orientation
+    wait_for_datum: false               # Auto-initialize map from first GPS fix
+    base_link_frame: base_link
+    odom_frame: odom                    # Must match ekf_filter_node_odom
+    world_frame: map
+    datum: [38.1614789, -122.454630, 0.0]  # Example (replace with your GPS origin)

@@ -38,7 +38,7 @@ def generate_launch_description():
             parameters=[nav2_params_path],
             remappings=[
                 ('/cmd_vel', '/demo/cmd_vel'),
-                ('/odom', '/odometry/map'),
+                ('/odom', '/odometry/odom'),
             ]
         ),
 
@@ -69,7 +69,8 @@ def generate_launch_description():
             parameters=[nav2_params_path],
             remappings=[
                 ('/tf', 'tf'),
-                ('/tf_static', 'tf_static')
+                ('/tf_static', 'tf_static'),
+                ('/odom', '/odometry/odom'),
             ]
         ),
 
@@ -80,6 +81,9 @@ def generate_launch_description():
             name='behavior_server',
             output='screen',
             parameters=[nav2_params_path],
+            remappings=[
+                ('/cmd_vel', '/demo/cmd_vel'),
+            ]
         ),
 
         # Lifecycle Manager
@@ -115,6 +119,6 @@ def generate_launch_description():
             name='waypoint_publisher',
             output='screen',
             # Add a delay before launching to ensure waypoint follower is fully active
-            prefix=['bash -c "sleep 10.0 && exec $0 $@"'],
+            prefix=['bash -c "sleep 5.0 && exec $0 $@"'],
         ),
     ])
