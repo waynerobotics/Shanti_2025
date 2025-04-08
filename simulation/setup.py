@@ -23,6 +23,7 @@ setup(
     entry_points={
         'console_scripts': [
             'simulation_node = simulation.simulation_node:main',  # ✅ Correct reference
+            'equirect_stitcher = simulation.equirect_stitcher:main',  # ✅ Correct reference
         ],
     },
 )

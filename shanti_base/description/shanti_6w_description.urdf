@@ -14,6 +14,8 @@
   <xacro:property name="caster_xoff" value="0.14" />
   <xacro:property name="lidar_radius" value="0.05" />
   <xacro:property name="lidar_width" value="0.04" />
+  <xacro:property name="camera_radius" value="0.05" />
+  <xacro:property name="camera_width" value="0.04" />
 
   <!-- Define inertial property macros  -->
   <xacro:macro name="box_inertia" params="m w h d">
@@ -286,6 +288,141 @@
         <frame_name>lidar_link</frame_name>
       </plugin>
 
+    </sensor>
+  </gazebo>
+
+  <!-- Camera Sensor-->
+  <!-- <link name="camera_link">
+    <visual>
+      <geometry>
+        <cylinder radius="${camera_radius}" length="${camera_width}" />
+      </geometry>
+      <material name="Red">
+        <color rgba="0.7 0.5 0.5 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="${camera_radius}" length="${camera_width}" />
+      </geometry>
+    </collision>
+
+    <xacro:cylinder_inertia m="0.5" r="${camera_radius}" h="${camera_width}" />
+  </link> -->
+
+  <!-- Front Camera Link/Joint -->
+  <link name="camera_front">
+      <visual>
+      <geometry>
+        <cylinder radius="${camera_radius}" length="${camera_width}" />
+      </geometry>
+      <material name="Red">
+        <color rgba="0.7 0.5 0.5 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="${camera_radius}" length="${camera_width}" />
+      </geometry>
+    </collision>
+    <xacro:cylinder_inertia m="0.5" r="${camera_radius}" h="${camera_width}" />
+  </link>
+
+  <joint name="camera_front_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_front"/>
+    <origin xyz="0 0 1.0" rpy="0 0 0"/> <!-- Front-facing -->
+  </joint>
+  
+
+  <!-- Rear Camera Link/Joint -->
+  <link name="camera_rear">
+      <visual>
+      <geometry>
+        <cylinder radius="${camera_radius}" length="${camera_width}" />
+      </geometry>
+      <material name="Red">
+        <color rgba="0.7 0.5 0.5 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="${camera_radius}" length="${camera_width}" />
+      </geometry>
+    </collision>
+    <xacro:cylinder_inertia m="0.5" r="${camera_radius}" h="${camera_width}" />
+  </link>
+
+  <joint name="camera_rear_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_rear"/>
+    <origin xyz="0 0 1.0" rpy="0 0 3.14159"/> <!-- 180° rotation -->
+  </joint>
+
+<!-- Front Camera -->
+<gazebo reference="camera_front">
+  <sensor name="front_camera" type="wideanglecamera">
+    <update_rate>30</update_rate>
+    <camera name="front">
+      <horizontal_fov>3.14</horizontal_fov> <!-- ~170° (less than 180° to avoid singularity) -->
+      <image>
+        <width>1440</width>
+        <height>1440</height> <!-- Square aspect ratio -->
+        <format>R8G8B8</format>
+      </image>
+      <clip>
+        <near>0.02</near>
+        <far>300</far>
+      </clip>
+      <noise>
+        <type>gaussian</type>
+        <mean>0.0</mean>
+        <stddev>0.007</stddev>
+      </noise>
+      <!-- Fisheye-like distortion -->
+      <distortionK1>0.5</distortionK1>  <!-- Strong radial distortion -->
+      <distortionK2>0.3</distortionK2>
+      <distortionK3>0.1</distortionK3>
+    </camera>
+    <plugin name="front_cam_plugin" filename="libgazebo_ros_camera.so">
+      <cameraName>front_camera</cameraName>
+      <imageTopicName>front/image_raw</imageTopicName>
+      <cameraInfoTopicName>front/camera_info</cameraInfoTopicName>
+      <frameName>camera_front</frameName>
+    </plugin>
+  </sensor>
+</gazebo>
+  <!-- Rear Camera -->
+  <gazebo reference="camera_rear">
+    <sensor name="rear_camera" type="wideanglecamera">
+      <update_rate>30</update_rate>
+      <camera name="rear">
+        <horizontal_fov>3.14</horizontal_fov> <!-- 180° FOV -->
+        <image>
+          <width>1440</width>
+          <height>1440</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.02</near>
+          <far>300</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.007</stddev>
+        </noise>
+        <!-- Fisheye-like distortion -->
+        <distortionK1>0.5</distortionK1>  <!-- Strong radial distortion -->
+        <distortionK2>0.3</distortionK2>
+        <distortionK3>0.1</distortionK3>
+      </camera>
+      <plugin name="rear_cam_plugin" filename="libgazebo_ros_camera.so">
+        <cameraName>rear_camera</cameraName>
+        <imageTopicName>rear/image_raw</imageTopicName>
+        <cameraInfoTopicName>rear/camera_info</cameraInfoTopicName>
+        <frameName>camera_rear</frameName>
+      </plugin>
     </sensor>
   </gazebo>
 
