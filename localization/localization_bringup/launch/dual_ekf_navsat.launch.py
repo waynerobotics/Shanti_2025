@@ -122,23 +122,6 @@ def generate_launch_description():
                     'map_odom_topic': map_odom_topic
                 }],
             ),
-            # Add GPS Map Transformer node as lifecycle node
-            LifecycleNode(
-                package="localization_bringup",
-                executable="gps_map_transformer",
-                name="gps_map_transformer",
-                output="screen",
-                namespace='',
-                parameters=[{
-                    'use_sim_time': use_sim_time,
-                    'map_frame': map_frame,
-                    'utm_frame': utm_frame,
-                    'gps_topic': gps_topic,
-                    'map_pose_topic': '/gps/pose/map',
-                    'publish_rate': 10.0,
-                    'transform_check_period': 1.0
-                }],
-            ),
             # Add the custom lifecycle manager
             custom_lifecycle_manager,
             launch_ros.actions.Node(
