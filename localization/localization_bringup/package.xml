@@ -13,10 +13,13 @@
   <test_depend>python3-pytest</test_depend>
 
   <depend>rclpy</depend>
+  <depend>lifecycle_msgs</depend>
+  <depend>nav2_lifecycle_manager</depend>
   <depend>sensor_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
   <depend>std_srvs</depend>
   <depend>python3-utm</depend>
   <depend>pyproj</depend>
