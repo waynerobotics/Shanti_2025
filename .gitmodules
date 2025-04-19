@@ -4,9 +4,12 @@
 [submodule "practical_robot_tools/Web_UI"]
 	path = practical_robot_tools/Web_UI
 	url = git@github.com:waynerobotics/Web_UI.git
-[submodule "perception/omnivision"]
-	path = perception/omnivision
-	url = git@github.com:BlaineKTMO/omnivision.git
 [submodule "shanti_base/shanti_base/unilidar_sdk"]
 	path = shanti_base/shanti_base/unilidar_sdk
 	url = git@github.com:LordDanielW/unilidar_sdk.git
+[submodule "perception/omnivision"]
+	path = perception/omnivision
+	url = git@github.com:waynerobotics/omnivision.git
+[submodule "perception/vision3D"]
+	path = perception/vision3D
+	url = git@github.com:waynerobotics/vision3D.git
