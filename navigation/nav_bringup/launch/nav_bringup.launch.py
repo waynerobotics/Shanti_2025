@@ -100,25 +100,18 @@ def generate_launch_description():
                     'planner_server',
                     'bt_navigator',
                     'waypoint_follower',
-                    'behavior_server',  # Changed from recovery_server to behavior_server
+                    'behavior_server',
                 ]},
             ]
         ),
 
-        # Include GPS Localization
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                os.path.join(get_package_share_directory('localization_bringup'), 'launch', 'dual_ekf_navsat.launch.py')
-            )
-        ),
-
-        # Waypoint Publisher - launched with a delay to ensure waypoint follower is active
+        # Goal Listener - for processing goals from RViz
         Node(
             package='nav_bringup',
-            executable='waypoint_publisher',
-            name='waypoint_publisher',
+            executable='goal_listener',
+            name='goal_listener',
             output='screen',
-            # Add a delay before launching to ensure waypoint follower is fully active
+            # Add a delay before launching to ensure navigation stack is active
             prefix=['bash -c "sleep 5.0 && exec $0 $@"'],
         ),
     ])
