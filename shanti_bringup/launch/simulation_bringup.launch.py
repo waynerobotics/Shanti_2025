@@ -20,7 +20,7 @@ def generate_launch_description():
     # Parameter for teleoperation
     teleop_arg = launch.actions.DeclareLaunchArgument(
         'teleop',
-        default_value='False',
+        default_value='True',
         description='Flag to enable teleoperation'
     )
 
@@ -117,11 +117,41 @@ def generate_launch_description():
         ],
         condition=launch.conditions.IfCondition(LaunchConfiguration('teleop'))
     )
+    # Launch a node that will record the joystick button presses as GPS coordinates
+    # This node will log the GPS coordinates when the joystick button is pressed 
+    joystick_gps_logger_node = launch_ros.actions.Node(
+    package='nav_bringup',
+    executable='waypoint_joystick_record',
+    
+    name='joystick_gps_logger',
+    output='screen',
+    
+    parameters=[
+        {'output_directory': '/home/cares/ros2_ws/src/Shanti_2025/navigation/nav_bringup/params/'},
+        {'joystick_button_index': 0},  # Adjust button index if needed
+    ],
+    condition=launch.conditions.IfCondition(LaunchConfiguration('teleop'))
+    )
 
     #this node take odom, gps and imu nodes and outputs it in utm coordinates
-    localization_node = launch_ros.actions.Node(
-        package='localization',
-        executable='localization_node'
+    localization_node = IncludeLaunchDescription(
+    PythonLaunchDescriptionSource(
+        os.path.join(
+            get_package_share_directory('localization_bringup'),
+            'launch',
+            'dual_ekf_navsat.launch.py'
+        )
+    )
+    )
+    
+    nav2_bringup_node =  IncludeLaunchDescription(
+    PythonLaunchDescriptionSource(
+        os.path.join(
+            get_package_share_directory('nav_bringup'),
+            'launch',
+            'nav_bringup.launch.py'
+        )
+    )
     )
     
     #this node relays the /demo/cmd_vel to all the wheels
@@ -139,18 +169,23 @@ def generate_launch_description():
         launch.actions.DeclareLaunchArgument(name='rvizconfig', default_value=default_rviz_config_path,
                                             description='Absolute path to rviz config file'),
         teleop_arg,
-#        launch.actions.ExecuteProcess(cmd=['gazebo', '--verbose', '-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so'], output='screen'),
-
         gzclient_launch,
         gzserver_launch,
         joint_state_publisher_node,
         #joint_state_publisher_gui_node,
         robot_state_publisher_node,
         spawn_entity,
+
+        #joystick nodes and the gps logger nodes
         joy_node,
         joy2twist_node,
+        joystick_gps_logger_node,
+
         rviz_node,
-        #localization_node,
+        localization_node,
+        #nav2_bringup_node,  
+        
+
         relay_cmd_vel
         ])
 

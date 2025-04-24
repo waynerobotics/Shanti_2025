@@ -26,6 +26,8 @@ setup(
         'console_scripts': [
             'waypoint_publisher = nav_bringup.waypoint_publisher:main',
             'goal_listener = nav_bringup.goal_listener:main',
+            'waypoint_joystick_record = nav_bringup.waypoint_joystick_record:main',
+            
         ],
     },
 )
