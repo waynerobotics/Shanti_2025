@@ -20,7 +20,7 @@ def generate_launch_description():
     # Parameter for teleoperation
     teleop_arg = launch.actions.DeclareLaunchArgument(
         'teleop',
-        default_value='True',
+        default_value='false',
         description='Flag to enable teleoperation'
     )
 
@@ -183,7 +183,7 @@ def generate_launch_description():
 
         rviz_node,
         localization_node,
-        #nav2_bringup_node,  
+        nav2_bringup_node,  
         
 
         relay_cmd_vel

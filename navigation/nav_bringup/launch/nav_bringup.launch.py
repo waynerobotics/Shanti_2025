@@ -11,7 +11,7 @@ def generate_launch_description():
     pkg_dir = get_package_share_directory('nav_bringup')
     
     # Create the absolute path to the parameters file
-    nav2_params_path = os.path.join(pkg_dir, 'params', 'nav2_params.yaml')
+    nav2_params_path = os.path.join(pkg_dir, 'params', 'gps_waypoints_session_20250424_150257.yaml')
     
     # Print the parameters file path for debugging
     print(f"Loading navigation parameters from: {nav2_params_path}")
