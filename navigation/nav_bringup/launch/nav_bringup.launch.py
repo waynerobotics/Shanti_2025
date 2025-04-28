@@ -86,6 +86,17 @@ def generate_launch_description():
             ]
         ),
 
+        # Goal Listener - for processing goals from RViz
+#        Node(
+#           package='nav_bringup',
+#           executable='waypoint_publisher',
+#           name='waypoint_publisher',
+#           output='screen',
+#           parameters=[
+#               {'waypoints_file': 'gps_waypoints_session_20250424_150257.yaml'},
+#           ],
+#       ),
+
         # Lifecycle Manager
         Node(
             package='nav2_lifecycle_manager',
@@ -101,6 +112,7 @@ def generate_launch_description():
                     'bt_navigator',
                     'waypoint_follower',
                     'behavior_server',
+                    #'waypoint_publisher',
                 ]},
             ]
         ),
@@ -115,14 +127,4 @@ def generate_launch_description():
         #     prefix=['bash -c "sleep 5.0 && exec $0 $@"'],
         # ),
 
-        # Goal Listener - for processing goals from RViz
-        Node(
-            package='nav_bringup',
-            executable='waypoint_publisher',
-            name='waypoint_publisher',
-            output='screen',
-            parameters=[
-                {'waypoints_file': 'gps_waypoints_session_20250424_150257.yaml'},
-            ],
-        ),
     ])

@@ -26,7 +26,7 @@ def generate_launch_description():
 
     # get the urdf model file
     pkg_share = launch_ros.substitutions.FindPackageShare(package='shanti_base').find('shanti_base')
-    default_model_path = os.path.join(pkg_share, 'description/shanti_6w_description.urdf')
+    default_model_path = os.path.join(pkg_share, 'description/shanti_6w_lidar_description.urdf')
     default_rviz_config_path = os.path.join(pkg_share, 'rviz/urdf_config.rviz')
     print (default_model_path)
     # Find Gazebo files
@@ -183,7 +183,7 @@ def generate_launch_description():
 
         rviz_node,
         localization_node,
-        nav2_bringup_node,  
+        #nav2_bringup_node,  
         
 
         relay_cmd_vel
