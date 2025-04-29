@@ -91,7 +91,7 @@ controller_server:
       rotate_to_heading_yaw_tolerance: 0.2
       max_angular_accel: 3.2
       goal_dist_tol: 2.0
-      allow_reversing: false
+      allow_reversing: true
       trans_stopped_velocity: 0.01
       rotate_stopped_velocity: 0.01
       debug_trajectory_details: true
@@ -110,7 +110,7 @@ local_costmap:
       origin_x: 10.0 
       origin_y: 10.0
       resolution: 0.1
-      footprint: "[[-0.5, -0.4], [-0.5, 0.4], [0.5, 0.4], [0.5, -0.4]]"
+      footprint: "[[-0.6, -0.5], [-0.6, 0.5], [0.6, 0.5], [0.6, -0.5]]"
       plugins: ["obstacle_layer", "inflation_layer"]
       track_unknown_space: false
       always_send_full_costmap: true
@@ -153,13 +153,13 @@ global_costmap:
       global_frame: map
       robot_base_frame: base_link
       use_sim_time: true
-      robot_radius: 0.22
+      footprint: "[[-0.6, -0.5], [-0.6, 0.5], [0.6, 0.5], [0.6, -0.5]]"
       resolution: 0.05
       rolling_window: true
-      width: 25
-      height: 25
-      origin_x: -12.5
-      origin_y: -12.5
+      width: 50
+      height: 50
+      origin_x: -25.
+      origin_y: -25.
       plugins: ["obstacle_layer", "inflation_layer"]
       track_unknown_space: false
       always_send_full_costmap: true
@@ -173,18 +173,26 @@ global_costmap:
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: true
-        observation_sources: scan
-        scan:
-          topic: /scan
-          max_obstacle_height: 2.0
+        observation_sources: front_left back_right
+        front_left:
+          topic: /gazebo_ros_laser_controller_front_left/out
+          max_obstacle_height: 3.
+          min_obstacle_height: 0.17
           clearing: true
           marking: true
-          data_type: "LaserScan"
+          data_type: "PointCloud2"
+        back_right:
+          topic: /gazebo_ros_laser_controller_back_right/out
+          max_obstacle_height: 3.
+          min_obstacle_height: 0.17
+          clearing: true
+          marking: true
+          data_type: "PointCloud2"
       
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        inflation_radius: 0.55
+        inflation_radius: 1.
 
 planner_server:
   ros__parameters:

@@ -27,7 +27,7 @@ def generate_launch_description():
     # get the urdf model file
     pkg_share = launch_ros.substitutions.FindPackageShare(package='shanti_base').find('shanti_base')
     default_model_path = os.path.join(pkg_share, 'description/shanti_6w_lidar_description.urdf')
-    default_rviz_config_path = os.path.join(pkg_share, 'rviz/urdf_config.rviz')
+    default_rviz_config_path = os.path.join(pkg_share, 'rviz/rviz.rviz')
     print (default_model_path)
     # Find Gazebo files
     gazebo_share = f'/opt/ros/{ros_distro}/share/gazebo_ros'
@@ -99,6 +99,7 @@ def generate_launch_description():
     #     arguments=['-entity', 'shanti', '-topic', 'robot_description'],
     #     output='screen'
     # )
+
     # Launch joystick node conditionally based on teleop parameter
     joy_node = launch_ros.actions.Node(
         package='joy',
