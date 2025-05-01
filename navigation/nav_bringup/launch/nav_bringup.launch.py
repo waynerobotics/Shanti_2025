@@ -86,16 +86,16 @@ def generate_launch_description():
             ]
         ),
 
-        # Goal Listener - for processing goals from RViz
-#        Node(
-#           package='nav_bringup',
-#           executable='waypoint_publisher',
-#           name='waypoint_publisher',
-#           output='screen',
-#           parameters=[
-#               {'waypoints_file': 'gps_waypoints_session_20250424_150257.yaml'},
-#           ],
-#       ),
+    #Goal Listener - for processing goals from file
+       Node(
+          package='nav_bringup',
+          executable='waypoint_publisher',
+          name='waypoint_publisher',
+          output='screen',
+          parameters=[
+              {'waypoints_file': 'gps_waypoints_session_20250424_150257.yaml'},
+          ],
+      ),
 
         # Lifecycle Manager
         Node(
@@ -118,13 +118,13 @@ def generate_launch_description():
         ),
 
         # # Goal Listener - for processing goals from RViz
-        # Node(
-        #     package='nav_bringup',
-        #     executable='goal_listener',
-        #     name='goal_listener',
-        #     output='screen',
-        #     # Add a delay before launching to ensure navigation stack is active
-        #     prefix=['bash -c "sleep 5.0 && exec $0 $@"'],
-        # ),
+        Node(
+            package='nav_bringup',
+            executable='goal_listener',
+            name='goal_listener',
+            output='screen',
+            # Add a delay before launching to ensure navigation stack is active
+            prefix=['bash -c "sleep 5.0 && exec $0 $@"'],
+        ),
 
     ])
