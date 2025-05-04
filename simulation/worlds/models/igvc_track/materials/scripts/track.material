@@ -32,7 +32,7 @@ material vrc/track
 
 			texture_unit
 			{
-				texture track_floor.png
+				texture track_floor3.png
 				filtering anistropic
 				max_anisotropy 16
 				scale 1 1
