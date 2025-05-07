@@ -20,7 +20,7 @@ def generate_launch_description():
     # Parameter for teleoperation
     teleop_arg = launch.actions.DeclareLaunchArgument(
         'teleop',
-        default_value='false',
+        default_value='true',
         description='Flag to enable teleoperation'
     )
 
@@ -37,7 +37,8 @@ def generate_launch_description():
     print(gzclient_launch_path)
     print(gzserver_launch_path)
    # Find the world file
-    worldfile = f'{home_dir}ros2_ws/src/Shanti_2025/simulation/worlds/map1.world'
+    #worldfile = f'{home_dir}ros2_ws/src/Shanti_2025/simulation/worlds/map1.world'
+    worldfile = f'{home_dir}ros2_ws/src/Shanti_2025/simulation/worlds/competition.world'
     print (worldfile)
     print ('****************************')
     gzclient_launch = IncludeLaunchDescription(
@@ -86,8 +87,8 @@ def generate_launch_description():
         arguments=[
             '-entity', 'shanti',
             '-topic', 'robot_description',
-            '-x', '0', '-y', '0', '-z', '3',  # Position (x, y, z)
-            '-R', '0.0', '-P', '0.0', '-Y', '0'   # Orientation (roll, pitch, yaw) in radians
+            '-x', '-20.26', '-y', '24.8', '-z', '3',  # Position (x, y, z)
+            '-R', '0.0', '-P', '0.0', '-Y', '3.14'   # Orientation (roll, pitch, yaw) in radians
         ],
         output='screen'
     )   
@@ -121,17 +122,15 @@ def generate_launch_description():
     # Launch a node that will record the joystick button presses as GPS coordinates
     # This node will log the GPS coordinates when the joystick button is pressed 
     joystick_gps_logger_node = launch_ros.actions.Node(
-    package='nav_bringup',
-    executable='waypoint_joystick_record',
-    
-    name='joystick_gps_logger',
-    output='screen',
-    
-    parameters=[
-        {'output_directory': '/home/cares/ros2_ws/src/Shanti_2025/navigation/nav_bringup/params/'},
-        {'joystick_button_index': 0},  # Adjust button index if needed
-    ],
-    condition=launch.conditions.IfCondition(LaunchConfiguration('teleop'))
+        package='nav_bringup',
+        executable='waypoint_joystick_record',
+        name='joystick_gps_logger',
+        output='screen',
+        parameters=[
+            {'output_directory': f'{home_dir}/ros2_ws/src/Shanti_2025/navigation/nav_bringup/params'},
+            {'joystick_button_index': 0}  # Adjust button index if needed
+        ],
+        condition=launch.conditions.IfCondition(LaunchConfiguration('teleop'))
     )
 
     #this node take odom, gps and imu nodes and outputs it in utm coordinates
@@ -178,6 +177,7 @@ def generate_launch_description():
         spawn_entity,
 
         #joystick nodes and the gps logger nodes
+
         joy_node,
         joy2twist_node,
         joystick_gps_logger_node,
