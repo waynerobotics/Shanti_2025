@@ -20,7 +20,7 @@ def generate_launch_description():
     # Parameter for teleoperation
     teleop_arg = launch.actions.DeclareLaunchArgument(
         'teleop',
-        default_value='true',
+        default_value='false',
         description='Flag to enable teleoperation'
     )
 

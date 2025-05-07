@@ -86,14 +86,14 @@ def generate_launch_description():
             ]
         ),
 
-    #Goal Listener - for processing goals from file
+    #Goal Listener - for processing goals from file  #original file gps_waypoints_session_20250424_150257.yaml
        Node(
           package='nav_bringup',
           executable='waypoint_publisher',
           name='waypoint_publisher',
           output='screen',
           parameters=[
-              {'waypoints_file': 'gps_waypoints_session_20250424_150257.yaml'},
+              {'waypoints_file': 'gps_waypoints_session_20250507_183103.yaml'},
           ],
       ),
 
