@@ -1,3 +1,10 @@
 
       <latitude_deg>42.66791</latitude_deg>
       <longitude_deg>-83.21958</longitude_deg>
+
+
+
+california:
+
+     <latitude_deg>38.161479</latitude_deg>
+      <longitude_deg>-122.454630</longitude_deg>
