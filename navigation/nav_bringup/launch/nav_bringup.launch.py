@@ -95,6 +95,8 @@ def generate_launch_description():
           parameters=[
               {'waypoints_file': 'gps_waypoints_session_20250507_183103.yaml'},
           ],
+          # Add a delay before launching to ensure navigation stack and transforms are ready
+          prefix=['bash -c "sleep 7.0 && exec $0 $@"'],
       ),
 
         # Lifecycle Manager
