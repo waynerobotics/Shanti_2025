@@ -29,6 +29,7 @@ class WaypointPublisher(Node):
         self.waypoints_file = self.get_parameter('waypoints_file').value
         self.utm_frame = self.get_parameter('utm_frame').value
         self.map_frame = self.get_parameter('map_frame').value
+        self.get_logger().info(f'*** Using map coordinates: {self.map_frame}')
         
         # Set up tf listener for utm to map transform
         self.tf_buffer = Buffer()

@@ -1,0 +1,3 @@
+
+      <latitude_deg>42.66791</latitude_deg>
+      <longitude_deg>-83.21958</longitude_deg>
