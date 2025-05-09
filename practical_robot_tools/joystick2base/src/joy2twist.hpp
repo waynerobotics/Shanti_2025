@@ -28,6 +28,8 @@ private:
   std::string twist_topic_;
   double linear_scale_;
   double angular_scale_;
+  int linear_axis_;
+  int angular_axis_;
   
   // Callback
   void joyCallback(const sensor_msgs::msg::Joy::SharedPtr joy_msg);

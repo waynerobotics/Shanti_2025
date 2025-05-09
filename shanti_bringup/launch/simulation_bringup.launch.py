@@ -87,19 +87,11 @@ def generate_launch_description():
         arguments=[
             '-entity', 'shanti',
             '-topic', 'robot_description',
-            '-x', '-20.26', '-y', '24.8', '-z', '3',  # orig..x,y = 0.  Position (x, y, z)... oakland: '-x', '-20.26', '-y', '24.8', '-z', '3',
-            '-R', '0.0', '-P', '0.0', '-Y', '0.0'   # Orientation (roll, pitch, yaw) in radians
+            '-x', '13.0', '-y', '33.0', '-z', '1',  # orig..x,y = 0.  Position (x, y, z)... oakland: '-x', '-20.26', '-y', '24.8', '-z', '3',
+            '-R', '0.0', '-P', '0.0', '-Y', '1.58093'   # Orientation (roll, pitch, yaw) in radians
         ],
         output='screen'
     )   
-
-    
-    # spawn_entity = launch_ros.actions.Node(
-    #     package='gazebo_ros',
-    #     executable='spawn_entity.py',
-    #     arguments=['-entity', 'shanti', '-topic', 'robot_description'],
-    #     output='screen'
-    # )
 
     # Launch joystick node conditionally based on teleop parameter
     joy_node = launch_ros.actions.Node(
@@ -117,6 +109,10 @@ def generate_launch_description():
         remappings=[
             ('/turtle1/cmd_vel', '/demo/cmd_vel')
         ],
+        parameters=[{
+            'linear_axis': 1, 
+            'angular_axis': 0, # 0 for yoke, 3 for joystick
+        }],
         condition=launch.conditions.IfCondition(LaunchConfiguration('teleop'))
     )
     # Launch a node that will record the joystick button presses as GPS coordinates
@@ -159,7 +155,19 @@ def generate_launch_description():
         package='simulation',
         executable='simulation_node'
     )
-        
+    
+    # Add waypoint flags spawn node
+    spawn_waypoint_flags = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('shanti_bringup'),
+                'launch',
+                'spawn_waypoint_flags.launch.py'
+            )
+        ),
+        launch_arguments={}.items()
+    )
+
 
     return launch.LaunchDescription([
         launch.actions.DeclareLaunchArgument(name='gui', default_value='True',
@@ -186,8 +194,9 @@ def generate_launch_description():
         localization_node,
         #nav2_bringup_node,  
         
-
-        relay_cmd_vel
+        relay_cmd_vel,
+        
+        spawn_waypoint_flags
         ])
 
 
