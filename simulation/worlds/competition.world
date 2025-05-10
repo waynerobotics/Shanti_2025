@@ -11,7 +11,7 @@
       <latitude_deg>42.66791</latitude_deg>
       <longitude_deg>-83.21958</longitude_deg>
       <elevation>286</elevation>
-      <heading_deg>180</heading_deg>
+      <heading_deg>90</heading_deg>
     </spherical_coordinates>
 
     <!-- Ground Plane -->
@@ -25,7 +25,7 @@
     <include>
       <uri>model://igvc_track</uri>
       <name>IGVC Track</name>
-      <pose>30 30 0 0 0 0</pose>
+      <pose>30 30 0 0 0 1.57</pose>
     </include>
 
     <!-- Ramp -->

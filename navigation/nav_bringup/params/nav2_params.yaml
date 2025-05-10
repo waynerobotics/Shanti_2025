@@ -143,7 +143,7 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        inflation_radius: 0.4 # was 0.55
+        inflation_radius: 0.55 # was 0.55
 
 global_costmap:
   global_costmap:
@@ -156,8 +156,8 @@ global_costmap:
       footprint: "[[-0.6, -0.5], [-0.6, 0.5], [0.6, 0.5], [0.6, -0.5]]"
       resolution: 0.05
       rolling_window: true
-      width: 100
-      height: 100
+      width: 200
+      height: 200
       origin_x: -25.
       origin_y: -25.
       plugins: ["obstacle_layer", "inflation_layer"]
@@ -203,7 +203,7 @@ planner_server:
     GridBased:
       plugin: "nav2_navfn_planner/NavfnPlanner"
       tolerance: 2.0
-      use_astar: true
+      use_astar: false
       allow_unknown: true
 
 waypoint_follower:

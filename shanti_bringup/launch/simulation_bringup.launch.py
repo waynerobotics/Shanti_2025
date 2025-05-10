@@ -4,6 +4,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration
 from ament_index_python.packages import get_package_share_directory
 import launch_ros
+from launch_ros.actions import Node  # Ensure this is imported
 import os
 
 def generate_launch_description():
@@ -87,7 +88,7 @@ def generate_launch_description():
         arguments=[
             '-entity', 'shanti',
             '-topic', 'robot_description',
-            '-x', '13.0', '-y', '33.0', '-z', '1',  # orig..x,y = 0.  Position (x, y, z)... oakland: '-x', '-20.26', '-y', '24.8', '-z', '3',
+            '-x', '13', '-y', '35', '-z', '1',  # orig..x,y = 0.  Position (x, y, z)... oakland: '-x', '-20.26', '-y', '24.8', '-z', '3',
             '-R', '0.0', '-P', '0.0', '-Y', '1.58093'   # Orientation (roll, pitch, yaw) in radians
         ],
         output='screen'
@@ -168,6 +169,13 @@ def generate_launch_description():
         launch_arguments={}.items()
     )
 
+    # Add a static transform publisher node
+    static_transform_publisher = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=['14.25258886627853', '34.49661302869208', '0', '0', '0', '1.58093', 'world', 'map'],
+        name='static_transform_publisher_gazebo_world_to_map'
+    )
 
     return launch.LaunchDescription([
         launch.actions.DeclareLaunchArgument(name='gui', default_value='True',
@@ -177,6 +185,7 @@ def generate_launch_description():
         launch.actions.DeclareLaunchArgument(name='rvizconfig', default_value=default_rviz_config_path,
                                             description='Absolute path to rviz config file'),
         teleop_arg,
+        static_transform_publisher,  # Add the static transform publisher here
         gzclient_launch,
         gzserver_launch,
         joint_state_publisher_node,
@@ -196,7 +205,7 @@ def generate_launch_description():
         
         relay_cmd_vel,
         
-        #spawn_waypoint_flags
+        spawn_waypoint_flags
         ])
 
 
