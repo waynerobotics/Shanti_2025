@@ -36,7 +36,192 @@
       <!-- <pose>-3 7 0 0 0 -1.5708</pose> -->
     </include>
     
-
+<!-- Construction Barrels Group -->
+    <model name="construction_barrels_group">
+      <static>1</static>
+      <pose>37.1634 53.7469 0 0 -0 1.5708</pose>
+      <!-- <pose>0 0 0 0 0 0</pose> -->
+      <link name="link">
+        <pose>0 0 0 0 0 0</pose>
+        <inertial>
+          <mass>1.0</mass>
+          <inertia>
+            <ixx>1.0</ixx>
+            <ixy>0.0</ixy>
+            <ixz>0.0</ixz>
+            <iyy>1.0</iyy>
+            <iyz>0.0</iyz>
+            <izz>1.0</izz>
+          </inertia>
+        </inertial>
+      </link>
+      
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel</name>
+        <pose>1 -21 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_0</name>
+        <pose>-39 -14 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_1</name>
+        <pose>-39 -11 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_2</name>
+        <pose>-44 -9 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_3</name>
+        <pose>-44 -10 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_4</name>
+        <pose>-42 -12 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_5</name>
+        <pose>-43 -11 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_6</name>
+        <pose>-43 14 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_7</name>
+        <pose>-40 -2 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_8</name>
+        <pose>-45 6 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_9</name>
+        <pose>-40 -3 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_10</name>
+        <pose>-43 6 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_11</name>
+        <pose>-35 -12 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_12</name>
+        <pose>-38 -14 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_13</name>
+        <pose>-4 -11 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_14</name>
+        <pose>-32 -12 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_15</name>
+        <pose>-6 24 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_16</name>
+        <pose>-41 13 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_17</name>
+        <pose>-43 12 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_18</name>
+        <pose>-44 14 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_19</name>
+        <pose>-43 16 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_20</name>
+        <pose>-42 16 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_21</name>
+        <pose>-42 17 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_22</name>
+        <pose>-41 16 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_23</name>
+        <pose>-41 22 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_24</name>
+        <pose>-41 12 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_25</name>
+        <pose>-42 12 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_26</name>
+        <pose>-41 25 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_27</name>
+        <pose>-22 26 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_28</name>
+        <pose>-22 23 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_29</name>
+        <pose>-11 25 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_30</name>
+        <pose>-10 25 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction Barrel_31</name>
+        <pose>-6 27 0 0 0 0</pose>
+      </include>
+    </model>
 
     <!-- Light -->
     <light name='sun' type='directional'>
