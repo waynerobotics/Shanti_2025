@@ -90,7 +90,7 @@ controller_server:
       rotate_to_heading_min_angle: 0.6 # Slightly reduced from 0.8
       rotate_to_heading_yaw_tolerance: 0.2
       max_angular_accel: 3.2
-      goal_dist_tol: 2.0
+      goal_dist_tol: 0.5
       allow_reversing: true
       trans_stopped_velocity: 0.01
       rotate_stopped_velocity: 0.01

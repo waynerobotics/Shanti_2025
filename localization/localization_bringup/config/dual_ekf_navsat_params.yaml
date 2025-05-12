@@ -96,4 +96,4 @@ navsat_transform:
     base_link_frame: base_link
     odom_frame: odom                    # Must match ekf_filter_node_odom
     world_frame: map
-    datum: [38.1614789, -122.454630, 0.0]  # Example (replace with your GPS origin)
+    datum: [42.66791, -83.21958, 0.0]  # Example (replace with your GPS origin)

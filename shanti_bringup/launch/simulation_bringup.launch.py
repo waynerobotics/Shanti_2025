@@ -169,13 +169,7 @@ def generate_launch_description():
         launch_arguments={}.items()
     )
 
-    # Add a static transform publisher node
-    static_transform_publisher = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        arguments=['14.25258886627853', '34.49661302869208', '0', '0', '0', '1.58093', 'world', 'map'],
-        name='static_transform_publisher_gazebo_world_to_map'
-    )
+
 
     return launch.LaunchDescription([
         launch.actions.DeclareLaunchArgument(name='gui', default_value='True',
@@ -185,7 +179,7 @@ def generate_launch_description():
         launch.actions.DeclareLaunchArgument(name='rvizconfig', default_value=default_rviz_config_path,
                                             description='Absolute path to rviz config file'),
         teleop_arg,
-        static_transform_publisher,  # Add the static transform publisher here
+        
         gzclient_launch,
         gzserver_launch,
         joint_state_publisher_node,
@@ -205,7 +199,7 @@ def generate_launch_description():
         
         relay_cmd_vel,
         
-        spawn_waypoint_flags
+        #spawn_waypoint_flags
         ])
 
 
