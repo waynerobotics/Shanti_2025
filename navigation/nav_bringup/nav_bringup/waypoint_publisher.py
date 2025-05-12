@@ -193,7 +193,7 @@ class WaypointPublisher(Node):
         current_waypoint = feedback.current_waypoint
         total_waypoints = len(self.waypoints)
         
-        self.get_logger().info(f'Currently executing waypoint: {current_waypoint} of {total_waypoints}')
+        #self.get_logger().info(f'Currently executing waypoint: {current_waypoint} of {total_waypoints}')
         
         # Reset the stall count since we're receiving feedback
         self.stall_count = 0

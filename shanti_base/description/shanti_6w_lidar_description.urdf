@@ -161,7 +161,7 @@
       </ros>
       <reference_latitude>42.66791</reference_latitude>
       <reference_longitude>-83.21958</reference_longitude>
-      <reference_heading>0.0</reference_heading> <!-- Optional -->
+      <reference_heading>90.0</reference_heading> <!-- Optional -->
       <drift>0.0</drift> <!-- Optional -->
 
     </plugin>

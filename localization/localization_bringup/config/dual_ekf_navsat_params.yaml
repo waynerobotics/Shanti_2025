@@ -87,7 +87,7 @@ navsat_transform:
     frequency: 51.0
     delay: 0.0
     magnetic_declination_radians: 0.0  # Set for your location (e.g., 0.2 for Zurich)
-    yaw_offset: 0.0                    # Adjust if IMU/GPS axes are misaligned
+    yaw_offset: 1.58093                    # Adjust if IMU/GPS axes are misaligned
     zero_altitude: false                 # Assume 2D navigation
     broadcast_cartesian_transform: false
     publish_filtered_gps: true

@@ -199,7 +199,7 @@ def generate_launch_description():
         
         relay_cmd_vel,
         
-        #spawn_waypoint_flags
+        spawn_waypoint_flags
         ])
 
 
