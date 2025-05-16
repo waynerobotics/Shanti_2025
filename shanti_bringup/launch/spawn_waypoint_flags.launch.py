@@ -88,7 +88,7 @@ def generate_launch_description():
                 '-file', model_path,
                 '-x', str(x),
                 '-y', str(y),
-                '-z', '1.0',
+                '-z', '4.0',
             ],
             output='screen'
         )

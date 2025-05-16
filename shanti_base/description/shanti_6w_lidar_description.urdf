@@ -206,7 +206,7 @@
 <joint name="lidar_front_left_joint" type="fixed">
 <parent link="base_footprint"/>
   <child link="lidar_front_left_link"/>
-  <origin xyz="0.55 0.4 0.2" rpy="0 3.14 0"/>
+  <origin xyz="0.55 0.4 0.5" rpy="0 3.14 0"/>
 </joint>
 
 <link name="lidar_back_right_link">
@@ -236,7 +236,7 @@
 <joint name="lidar_back_right_joint" type="fixed">
   <parent link="base_footprint"/>
   <child link="lidar_back_right_link"/>
-  <origin xyz="-0.55 -0.4 0.2" rpy="0 3.14 0"/> <!-- adjust for your robot -->
+  <origin xyz="-0.55 -0.4 0.5" rpy="0 3.14 0"/> <!-- adjust for your robot -->
 </joint>
 
 
