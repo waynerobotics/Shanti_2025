@@ -1,6 +1,22 @@
 # Shanti_2025
 Repository for IGVC 2025
 
+#These packages need to be installed:
+Make sure to also run 
+sudo apt update first.
+
+sudo apt install ros-humble-desktop
+
+sudo apt install ros-humble-gazebo-ros-pkgs ros-humble-gazebo-ros
+
+sudo apt install ros-humble-joint-state-publisher
+
+sudo apt install ros-humble-robot-localization ros-humble-nav2-bringup
+
+sudo apt install ros-humble-tf2-ros ros-humble-tf2-tools ros-humble-ros2-control ros-humble-joint-state-publisher-gui
+
+sudo apt install ros-humble-xacro
+
 ## Clone a Repository with Submodules
 If you clone this repository, you'll need to initialize the submodules after cloning:
 
