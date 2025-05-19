@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'tempPackage'
+package_name = 'temperature_control'
 
 setup(
     name=package_name,
@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-		'aishaPublisher1 = tempPackage.aishaPublisher1:main',
+		'aishaPublisher1 = temperature_control.aishaPublisher1:main',
         ],
     },
 )
