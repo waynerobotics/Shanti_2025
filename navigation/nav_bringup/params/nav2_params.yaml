@@ -140,6 +140,17 @@ local_costmap:
           marking: true
           data_type: "PointCloud2"
 
+        lane_camera:
+          topic: /lane_pointcloud
+          data_type: PointCloud2
+          expected_update_rate: 0.5
+          marking: true
+          clearing: false
+          min_obstacle_height: -0.1
+          max_obstacle_height: 0.1
+          obstacle_range: 10.0
+          raytrace_range: 0.0
+
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.5
@@ -188,6 +199,16 @@ global_costmap:
           clearing: true
           marking: true
           data_type: "PointCloud2"
+        lane_camera:
+          topic: /lane_pointcloud
+          data_type: PointCloud2
+          expected_update_rate: 0.5
+          marking: true
+          clearing: false
+          min_obstacle_height: -0.1
+          max_obstacle_height: 0.1
+          obstacle_range: 10.0
+          raytrace_range: 0.0
 
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
