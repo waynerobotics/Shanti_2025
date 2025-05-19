@@ -45,64 +45,56 @@ bt_navigator:
 controller_server:
   ros__parameters:
     use_sim_time: true
-    controller_frequency: 20.0  # Increased from 5.0 to improve responsiveness
+    controller_frequency: 20.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.001
     min_theta_velocity_threshold: 0.001
-    
+
     progress_checker_plugin: "progress_checker"
     goal_checker_plugin: "goal_checker"
     controller_plugins: ["FollowPath"]
-    
+
     progress_checker:
       plugin: "nav2_controller::SimpleProgressChecker"
-      required_movement_radius: 0.3  # Reduced from 0.5 to detect progress with smaller movements
-      movement_time_allowance: 5.0  # Increased from 3.0 to be more patient
-    
+      required_movement_radius: 0.3
+      movement_time_allowance: 5.0
+
     goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 1.0 # Reduced from 1.0 to be more precise
-      yaw_goal_tolerance: 6.28 # Reduced from 3.14 to prevent excessive rotation
-      stateful: true  # Changed to true to maintain goal checking state
-    
+      xy_goal_tolerance: 1.0
+      yaw_goal_tolerance: 6.28
+      stateful: true
+
     FollowPath:
-      plugin: "dwb_core::DWBLocalPlanner"
-      debug_trajectory_details: true
-      min_vel_x: -0.1
-      min_vel_y: 0.0
-      max_vel_x: 2.0
-      max_vel_y: 0.0
-      max_vel_theta: 2.0  # Reduced from 2.0 to prevent aggressive rotation
-      min_speed_xy: 0.0
-      max_speed_xy: 2.0
-      min_speed_theta: 0.0
-      acc_lim_x: 2.5
-      acc_lim_y: 0.0
-      acc_lim_theta: 2.0  # Reduced from 3.2 to smooth out rotations
-      decel_lim_x: -2.5
-      decel_lim_y: 0.0
-      decel_lim_theta: -2.0  # Reduced from -3.2 to smooth out rotation stops
-      vx_samples: 20
-      vy_samples: 0
-      vtheta_samples: 20  # Increased from 10 to consider more rotational velocities
-      sim_time: 2.5  # Increased from 1.7 to look further ahead
-      linear_granularity: 0.1
-      angular_granularity: 0.1
+      #plugin: "nav2_pure_pursuit_controller::PurePursuitController"
+      plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+      desired_linear_vel: 1.0
+      max_linear_accel: 2.5
+      max_linear_decel: 2.5
+      lookahead_dist: 0.9 # Reduced from 0.9 to make path following tighter
+      min_lookahead_dist: 0.3
+      max_lookahead_dist: 1.5 #0.9  # Reduced from 1.5 to prevent large shortcuts
+      lookahead_time: 0.8 #0.9 # Reduced from 1.5 to be more responsive
+      rotate_to_heading_angular_vel: 0.8
       transform_tolerance: 0.2
-      critics: ["ObstacleFootprint", "GoalAlign", "PathAlign", "GoalDist", "PathDist"]
-      
-      ObstacleFootprint:
-        scale: 1.0
-      GoalAlign:
-        scale: 5.0  # Increased from 1.0 to favor goal alignment
-        forward_point_distance: 0.5  # Increased from 0.325 to look further ahead
-      PathAlign:
-        scale: 10.0  # Increased from 1.0 to strongly favor path following
-        forward_point_distance: 0.325  # Increased from 0.325 to look further ahead
-      GoalDist:
-        scale: 10.0  # Reduced from 2.0 to balance with other critics
-      PathDist:
-        scale: 40.0  # Reduced from 32.0 to be more reasonable while still maintaining path following
+      use_velocity_scaled_lookahead_dist: true
+      min_approach_linear_velocity: 0.3
+      approach_velocity_scaling_dist: 1.0
+      use_collision_detection: true
+      max_allowed_time_to_collision: 2.0
+      use_regulated_linear_velocity_scaling: true
+      use_cost_regulated_linear_velocity_scaling: false
+      regulated_linear_scaling_min_radius: 0.5
+      regulated_linear_scaling_min_speed: 0.25
+      use_rotate_to_heading: false # Changed to true to ensure robot faces goal direction
+      rotate_to_heading_min_angle: 0.6 # Slightly reduced from 0.8
+      rotate_to_heading_yaw_tolerance: 0.2
+      max_angular_accel: 3.2
+      goal_dist_tol: 0.5
+      allow_reversing: true
+      trans_stopped_velocity: 0.01
+      rotate_stopped_velocity: 0.01
+      debug_trajectory_details: true
 
 local_costmap:
   local_costmap:
@@ -115,35 +107,54 @@ local_costmap:
       rolling_window: true
       width: 20
       height: 20
-      origin_x: -1.5
-      origin_y: -1.5
-      resolution: 0.05
-      footprint: "[[-0.21, -0.21], [-0.21, 0.21], [0.21, 0.21], [0.21, -0.21]]"
+      origin_x: 10.0
+      origin_y: 10.0
+      resolution: 0.1
+      footprint: "[[-0.6, -0.5], [-0.6, 0.5], [0.6, 0.5], [0.6, -0.5]]"
       plugins: ["obstacle_layer", "inflation_layer"]
       track_unknown_space: false
       always_send_full_costmap: true
-      
+
       # Explicitly disable static layer
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         enabled: false
         map_subscribe_transient_local: true
-      
+
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: true
-        observation_sources: scan
-        scan:
-          topic: /scan
-          max_obstacle_height: 2.0
+        observation_sources: front_left back_right
+        front_left:
+          topic: /gazebo_ros_laser_controller_front_left/out
+          max_obstacle_height: 3.
+          min_obstacle_height: 0.5
           clearing: true
           marking: true
-          data_type: "LaserScan"
-      
+          data_type: "PointCloud2"
+        back_right:
+          topic: /gazebo_ros_laser_controller_back_right/out
+          max_obstacle_height: 3.
+          min_obstacle_height: 0.5
+          clearing: true
+          marking: true
+          data_type: "PointCloud2"
+
+        lane_camera:
+          topic: /lane_pointcloud
+          data_type: PointCloud2
+          expected_update_rate: 0.5
+          marking: true
+          clearing: false
+          min_obstacle_height: -0.1
+          max_obstacle_height: 0.1
+          obstacle_range: 10.0
+          raytrace_range: 0.0
+
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.55
+        cost_scaling_factor: 3.5
+        inflation_radius: 0.4 # was 0.55
 
 global_costmap:
   global_costmap:
@@ -153,49 +164,67 @@ global_costmap:
       global_frame: map
       robot_base_frame: base_link
       use_sim_time: true
-      robot_radius: 0.22
+      footprint: "[[-0.6, -0.5], [-0.6, 0.5], [0.6, 0.5], [0.6, -0.5]]"
       resolution: 0.05
       rolling_window: true
-      width: 25
-      height: 25
-      origin_x: -5.
-      origin_y: -5.
+      width: 100
+      height: 100
+      origin_x: -25.
+      origin_y: -25.
       plugins: ["obstacle_layer", "inflation_layer"]
       track_unknown_space: false
       always_send_full_costmap: true
-      
+
       # Explicitly disable static layer
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         enabled: false
         map_subscribe_transient_local: true
-      
+
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: true
-        observation_sources: scan
-        scan:
-          topic: /scan
-          max_obstacle_height: 2.0
+        observation_sources: front_left back_right
+        front_left:
+          topic: /gazebo_ros_laser_controller_front_left/out
+          max_obstacle_height: 3.
+          min_obstacle_height: 0.5
           clearing: true
           marking: true
-          data_type: "LaserScan"
-      
+          data_type: "PointCloud2"
+        back_right:
+          topic: /gazebo_ros_laser_controller_back_right/out
+          max_obstacle_height: 3.
+          min_obstacle_height: 0.5
+          clearing: true
+          marking: true
+          data_type: "PointCloud2"
+        lane_camera:
+          topic: /lane_pointcloud
+          data_type: PointCloud2
+          expected_update_rate: 0.5
+          marking: true
+          clearing: false
+          min_obstacle_height: -0.1
+          max_obstacle_height: 0.1
+          obstacle_range: 10.0
+          raytrace_range: 0.0
+
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        inflation_radius: 0.55
+        inflation_radius: 1.0 #was 1.0
 
 planner_server:
   ros__parameters:
     expected_planner_frequency: 20.0
     use_sim_time: true
     planner_plugins: ["GridBased"]
-    
+
     GridBased:
       plugin: "nav2_navfn_planner/NavfnPlanner"
-      tolerance: 2.0  # Increased from 0.5 to 2.0 to be more forgiving with GPS navigation
-      use_astar: false
+      tolerance: 2.0
+      use_astar: true
       allow_unknown: true
 
 waypoint_follower:
@@ -204,11 +233,11 @@ waypoint_follower:
     stop_on_failure: false
     use_sim_time: true
     waypoint_task_executor_plugin: "wait_at_waypoint"
-    
+
     wait_at_waypoint:
       plugin: "nav2_waypoint_follower::WaitAtWaypoint"
       enabled: false
-      wait_duration: 0  # Restored to original value
+      wait_duration: 1
 
 behavior_server:
   ros__parameters:
@@ -230,4 +259,3 @@ behavior_server:
     max_rotational_vel: 1.0
     min_rotational_vel: 0.4
     rotational_acc_lim: 3.2
-
