@@ -12,7 +12,7 @@ import tf2_ros
 from tf2_ros import Buffer, TransformListener
 from ament_index_python.packages import get_package_share_directory
 import tf2_geometry_msgs
-import utm
+# Define your origin
 ORIGIN_LAT = 42.66791
 ORIGIN_LON = -83.21958
 
@@ -30,7 +30,6 @@ class WaypointPublisher(Node):
         
         # Get parameters
         self.waypoints_file = self.get_parameter('waypoints_file').value
-
         self.utm_frame = self.get_parameter('utm_frame').value
         self.map_frame = self.get_parameter('map_frame').value
         self.get_logger().info(f'*** Using map coordinates: {self.map_frame}')
@@ -143,19 +142,41 @@ class WaypointPublisher(Node):
             
             # Convert lat/lon to UTM
             try:
-                origin_e, origin_n, _, _ = utm.from_latlon(ORIGIN_LAT, ORIGIN_LON)
-                wp_e, wp_n, _, _ = utm.from_latlon(lat, lon)
-                pose = PoseStamped()
-                pose.header.frame_id = self.map_frame
-                pose.header.stamp = self.get_clock().now().to_msg()
-                pose.pose.position.x = wp_e - origin_e
-                pose.pose.position.y = wp_n - origin_n
-                pose.pose.position.z = 0.0
-                pose.pose.orientation.w = 1.0
-                poses.append(pose)
-            except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
-                self.get_logger().error(f'Transform failed: {e}')
-                continue
+                # easting, northing, zone_number, zone_letter = utm.from_latlon(lat, lon)
+                # self.get_logger().info(f'UTM coordinates: E={easting}, N={northing}, Zone={zone_number}{zone_letter}')
+                
+                # # Create PoseStamped in UTM frame
+                # utm_pose = PoseStamped()
+                # utm_pose.header.frame_id = self.utm_frame
+                # utm_pose.header.stamp = self.get_clock().now().to_msg()
+                # utm_pose.pose.position.x = easting
+                # utm_pose.pose.position.y = northing
+                # utm_pose.pose.position.z = 0.0
+                # utm_pose.pose.orientation.w = 1.0
+                
+                # # Transform from UTM to map frame
+                # try:
+                #     map_pose = self.tf_buffer.transform(utm_pose, self.map_frame)
+                #     poses.append(map_pose)
+
+                try:
+                    origin_e, origin_n, _, _ = utm.from_latlon(ORIGIN_LAT, ORIGIN_LON)
+                    wp_e, wp_n, _, _ = utm.from_latlon(lat, lon)
+
+                    pose = PoseStamped()
+                    pose.header.frame_id = self.map_frame
+                    pose.header.stamp = self.get_clock().now().to_msg()
+                    pose.pose.position.x = wp_e - origin_e
+                    pose.pose.position.y = wp_n - origin_n
+                    pose.pose.position.z = 0.0
+                    pose.pose.orientation.w = 1.0
+                    poses.append(pose)
+                    
+                    self.get_logger().info(f'Transformed to map coordinates: x={pose.pose.position.x}, y={pose.pose.position.y}')
+                except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
+                    self.get_logger().error(f'Transform failed: {e}')
+                    continue
+                    
             except Exception as e:
                 self.get_logger().error(f'Failed to convert GPS coordinates: {e}')
                 continue
@@ -193,7 +214,7 @@ class WaypointPublisher(Node):
         current_waypoint = feedback.current_waypoint
         total_waypoints = len(self.waypoints)
         
-        #self.get_logger().info(f'Currently executing waypoint: {current_waypoint} of {total_waypoints}')
+        self.get_logger().info(f'Currently executing waypoint: {current_waypoint} of {total_waypoints}')
         
         # Reset the stall count since we're receiving feedback
         self.stall_count = 0

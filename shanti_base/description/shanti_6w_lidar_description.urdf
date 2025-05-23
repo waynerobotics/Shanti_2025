@@ -45,6 +45,10 @@
 
   <!-- Robot Base -->
   <link name="base_link">
+  </link>
+
+  <!-- Robot Footprint -->
+  <link name="base_footprint">
     <visual>
       <geometry>
         <box size="${base_length} ${base_width} ${base_height}" />
@@ -53,7 +57,6 @@
         <color rgba="0 1.0 1.0 1.0" />
       </material>
     </visual>
-
     <collision>
       <geometry>
         <box size="${base_length} ${base_width} ${base_height}" />
@@ -62,13 +65,10 @@
 
     <xacro:box_inertia m="0.1" w="${base_width}" d="${base_length}" h="${base_height}" />
   </link>
-
-  <!-- Robot Footprint -->
-  <link name="base_footprint" />
   <joint name="base_joint" type="fixed">
     <parent link="base_link" />
     <child link="base_footprint" />
-    <origin xyz="0.0 0.0 ${-(wheel_radius+wheel_zoff)}" rpy="0 0 0" />
+    <origin xyz="0.0 0.0 ${(wheel_radius+wheel_zoff)}" rpy="0 0 0" />
   </joint>
 
   <!-- Wheels -->
@@ -94,7 +94,7 @@
     </link>
 
     <joint name="${prefix}_joint" type="continuous">
-      <parent link="base_link" />
+      <parent link="base_footprint" />
       <child link="${prefix}_link" />
       <origin xyz="${x_reflect*wheel_xoff} ${y_reflect*(base_width/2+wheel_ygap)} ${-wheel_zoff}"
         rpy="0 0 0" />
@@ -128,7 +128,7 @@
   </link>
 
   <joint name="imu_joint" type="fixed">
-    <parent link="base_link" />
+    <parent link="base_footprint" />
     <child link="imu_link" />
     <origin xyz="0 0 0.01" />
   </joint>
@@ -138,7 +138,7 @@
   <sensor name="shanti_gps" type="gps">
     <always_on>true</always_on>
     <update_rate>1</update_rate>
-    <pose>0 0 0 0 0 0</pose>
+    <pose>0 0 0.7 0 0 0</pose>
     <gps>
       <position_sensing>
         <horizontal>
@@ -159,6 +159,11 @@
       <ros>
         <remapping>~/out:=/gps/fix</remapping>
       </ros>
+      <reference_latitude>42.66791</reference_latitude>
+      <reference_longitude>-83.21958</reference_longitude>
+      <reference_heading>90.0</reference_heading> <!-- Optional -->
+      <drift>0.0</drift> <!-- Optional -->
+
     </plugin>
   </sensor>
 </gazebo>
@@ -166,7 +171,7 @@
 
   <!-- Add the gps link so we get a static transform for the GPS -->
   <joint name="gps_joint" type="fixed">
-    <parent link="base_link"/>
+    <parent link="base_footprint"/>
     <child link="gps_link"/>
     <origin xyz="0 0 0" rpy="0 0 0"/>
   </joint>
@@ -199,9 +204,9 @@
 </link>
 
 <joint name="lidar_front_left_joint" type="fixed">
-  <parent link="base_link"/>
+<parent link="base_footprint"/>
   <child link="lidar_front_left_link"/>
-  <origin xyz="0.55 0.4 0.2" rpy="0 3.14 0"/> <!-- adjust for your robot -->
+  <origin xyz="0.55 0.4 0.5" rpy="0 3.14 0"/>
 </joint>
 
 <link name="lidar_back_right_link">
@@ -229,9 +234,9 @@
 </link>
 
 <joint name="lidar_back_right_joint" type="fixed">
-  <parent link="base_link"/>
+  <parent link="base_footprint"/>
   <child link="lidar_back_right_link"/>
-  <origin xyz="-0.55 -0.4 0.2" rpy="0 3.14 0"/> <!-- adjust for your robot -->
+  <origin xyz="-0.55 -0.4 0.5" rpy="0 3.14 0"/> <!-- adjust for your robot -->
 </joint>
 
 
@@ -386,7 +391,64 @@
   </sensor>
 </gazebo>
 
+<!-- Camera Link -->
+<link name="camera_link">
+  <visual>
+    <geometry>
+      <box size="0.1 0.1 0.1" />
+    </geometry>
+    <material name="Black">
+      <color rgba="0.0 0.0 0.0 1.0" />
+    </material>
+  </visual>
+  <collision>
+    <geometry>
+      <box size="0.1 0.1 0.1" />
+    </geometry>
+  </collision>
+  <inertial>
+    <mass value="0.1" />
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <inertia
+      ixx="0.001" ixy="0.0" ixz="0.0"
+      iyy="0.001" iyz="0.0"
+      izz="0.001" />
+  </inertial>
+</link>
 
+<!-- Camera Joint -->
+<joint name="camera_joint" type="fixed">
+  <parent link="base_footprint" />
+  <child link="camera_link" />
+  <origin xyz="3.0 0.0 5.0" rpy="0 1.5707  0" />
+</joint>
+
+<!-- Gazebo Camera Sensor -->
+<gazebo reference="camera_link">
+  <sensor type="camera" name="camera_sensor">
+    <pose>0 0 0 0 0 0</pose>
+    <camera>
+      <horizontal_fov>1.047</horizontal_fov>
+      <image>
+        <width>640</width>
+        <height>480</height>
+        <format>R8G8B8</format>
+      </image>
+      <clip>
+        <near>0.1</near>
+        <far>100</far>
+      </clip>
+    </camera>
+    <plugin name="gazebo_ros_camera" filename="libgazebo_ros_camera.so">
+      <ros>
+        <namespace>/camera</namespace>
+        <remapping>image_raw:=camera/image_raw</remapping>
+        <remapping>camera_info:=camera/camera_info</remapping>
+      </ros>
+      <frame_name>camera_link</frame_name>
+    </plugin>
+  </sensor>
+</gazebo>
 
   <gazebo>
     <plugin name='diff_drive' filename='libgazebo_ros_diff_drive.so'>

@@ -265,6 +265,28 @@
       </link>
       <pose>-48.3038 -13.405 0 0 -0 0</pose>
     </model>
+    <model name="ramp">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <mesh>
+              <uri>model://ramp/meshes/ramp.dae</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>model://ramp/meshes/ramp.dae</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </visual>
+      </link>
+      <pose>5 0 0 0 0 0</pose>
+    </model>
     <model name='Construction Barrel_1'>
       <link name='link'>
         <inertial>
