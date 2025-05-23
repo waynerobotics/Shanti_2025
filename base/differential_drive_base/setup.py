@@ -25,6 +25,7 @@ setup(
         'console_scripts': [
             'test_node = differential_drive_base.test:main',
             'encoder_odom = differential_drive_base.odometry_publisher:main',
+            'roboclaw_controller = differential_drive_base.roboclaw_controller:main',
         ],
     },
 )

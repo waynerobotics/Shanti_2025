@@ -204,7 +204,7 @@
         enable_setting_baudrate: false
         #options: 115200, 230400, 460800, 921600, 2000000
         set_baudrate_value: 921600
-        #enable_outputConfig: true
+
 
         # Manual Gyro Bias Estimation (MGBE) Configuration
         # ------------------------------------------------
