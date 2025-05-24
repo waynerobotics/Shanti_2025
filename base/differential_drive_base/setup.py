@@ -28,4 +28,5 @@ setup(
             'roboclaw_controller = differential_drive_base.roboclaw_controller:main',
         ],
     },
+    py_modules=['differential_drive_base.roboclaw_3'],  # Explicitly include the roboclaw_3 module
 )

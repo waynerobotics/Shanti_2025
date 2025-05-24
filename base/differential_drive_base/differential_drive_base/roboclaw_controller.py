@@ -13,7 +13,7 @@ import logging
 
 # Import the RoboClaw driver
 try:
-    from roboclaw_3 import Roboclaw
+    from differential_drive_base.roboclaw_3 import Roboclaw
 except ImportError as e:
     print(f"Error importing Roboclaw library: {e}")
     print("Make sure the roboclaw_3 library is installed correctly")
@@ -26,6 +26,7 @@ class RoboclawControllerNode(Node):
     Each Roboclaw controls two motors (one on each side of the robot).
     """
     def __init__(self):
+        # Initialize the node BEFORE declaring parameters
         super().__init__('roboclaw_controller_node')
         
         # Create callback groups for better concurrency
@@ -33,8 +34,40 @@ class RoboclawControllerNode(Node):
         self.service_callback_group = ReentrantCallbackGroup()
         self.timer_callback_group = MutuallyExclusiveCallbackGroup()
         
-        # Declare and get parameters
-        self.declare_parameters()
+        # Instead of using declare_parameters(), declare parameters directly
+        # RoboClaw communication parameters
+        self.declare_parameter('left_roboclaw_port', '/dev/ttyACM0')
+        self.declare_parameter('right_roboclaw_port', '/dev/ttyACM1')
+        self.declare_parameter('baud_rate', 38400)
+        self.declare_parameter('left_address', 0x80)
+        self.declare_parameter('right_address', 0x80)
+        
+        # Robot physical parameters
+        self.declare_parameter('wheel_base', 0.5334)
+        self.declare_parameter('wheel_radius', 0.1016)
+        
+        # Controller parameters
+        self.declare_parameter('max_speed', 1.0)
+        self.declare_parameter('max_angular_speed', 1.5)
+        self.declare_parameter('encoder_cpr', 4096)
+        self.declare_parameter('cmd_timeout', 0.5)
+        self.declare_parameter('invert_left_motors', False)
+        self.declare_parameter('invert_right_motors', False)
+        self.declare_parameter('timeout', 0.1)
+        self.declare_parameter('retries', 3)
+        self.declare_parameter('debug_level', 1)
+        
+        # PID parameters
+        self.declare_parameter('pid_p', 1.36)
+        self.declare_parameter('pid_i', 0.08)
+        self.declare_parameter('pid_d', 0.0)
+        self.declare_parameter('pid_qpps', 45540)
+        
+        # Motor direction parameters - specify which motors need to be reversed
+        self.declare_parameter('reverse_left_m2', True)
+        self.declare_parameter('reverse_right_m2', True)
+        
+        # Get parameters from ROS
         self.get_parameters_from_ros()
         
         # Create mutex for thread safety
@@ -84,142 +117,6 @@ class RoboclawControllerNode(Node):
         
         self.get_logger().info('Roboclaw controller node initialized')
 
-    def declare_parameters(self):
-        """Declare all ROS parameters with descriptions"""
-        # RoboClaw communication parameters
-        self.declare_parameter(
-            'left_roboclaw_port', 
-            '/dev/ttyACM0',
-            ParameterDescriptor(
-                type=ParameterType.PARAMETER_STRING,
-                description='Serial port for the left Roboclaw controller'
-            )
-        )
-        self.declare_parameter(
-            'right_roboclaw_port', 
-            '/dev/ttyACM1',
-            ParameterDescriptor(
-                type=ParameterType.PARAMETER_STRING,
-                description='Serial port for the right Roboclaw controller'
-            )
-        )
-        self.declare_parameter(
-            'baud_rate', 
-            38400,
-            ParameterDescriptor(
-                type=ParameterType.PARAMETER_INTEGER,
-                description='Baud rate for Roboclaw communication'
-            )
-        )
-        self.declare_parameter(
-            'left_address', 
-            0x80,
-            ParameterDescriptor(
-                type=ParameterType.PARAMETER_INTEGER,
-                description='Address of the left Roboclaw controller'
-            )
-        )
-        self.declare_parameter(
-            'right_address', 
-            0x80,
-            ParameterDescriptor(
-                type=ParameterType.PARAMETER_INTEGER,
-                description='Address of the right Roboclaw controller'
-            )
-        )
-        
-        # Robot physical parameters
-        self.declare_parameter(
-            'wheel_base', 
-            0.5334,  # meters
-            ParameterDescriptor(
-                type=ParameterType.PARAMETER_DOUBLE,
-                description='Distance between wheels in meters'
-            )
-        )
-        self.declare_parameter(
-            'wheel_radius', 
-            0.1016,  # meters
-            ParameterDescriptor(
-                type=ParameterType.PARAMETER_DOUBLE,
-                description='Wheel radius in meters'
-            )
-        )
-        
-        # Controller parameters
-        self.declare_parameter(
-            'max_speed', 
-            1.0,  # m/s
-            ParameterDescriptor(
-                type=ParameterType.PARAMETER_DOUBLE,
-                description='Maximum linear speed in m/s'
-            )
-        )
-        self.declare_parameter(
-            'max_angular_speed', 
-            1.5,  # rad/s
-            ParameterDescriptor(
-                type=ParameterType.PARAMETER_DOUBLE,
-                description='Maximum angular speed in rad/s'
-            )
-        )
-        self.declare_parameter(
-            'encoder_cpr', 
-            4096,
-            ParameterDescriptor(
-                type=ParameterType.PARAMETER_INTEGER,
-                description='Encoder counts per revolution'
-            )
-        )
-        self.declare_parameter(
-            'cmd_timeout', 
-            0.5,  # seconds
-            ParameterDescriptor(
-                type=ParameterType.PARAMETER_DOUBLE,
-                description='Timeout for cmd_vel messages. Motors will stop if no command is received within this time'
-            )
-        )
-        self.declare_parameter(
-            'invert_left_motors', 
-            False,
-            ParameterDescriptor(
-                type=ParameterType.PARAMETER_BOOL,
-                description='Whether to invert the direction of left motors'
-            )
-        )
-        self.declare_parameter(
-            'invert_right_motors', 
-            False,
-            ParameterDescriptor(
-                type=ParameterType.PARAMETER_BOOL,
-                description='Whether to invert the direction of right motors'
-            )
-        )
-        self.declare_parameter(
-            'timeout', 
-            0.1,  # seconds
-            ParameterDescriptor(
-                type=ParameterType.PARAMETER_DOUBLE,
-                description='Serial port timeout in seconds'
-            )
-        )
-        self.declare_parameter(
-            'retries', 
-            3,
-            ParameterDescriptor(
-                type=ParameterType.PARAMETER_INTEGER,
-                description='Number of retries for Roboclaw commands'
-            )
-        )
-        self.declare_parameter(
-            'debug_level', 
-            1,  # 0=minimal, 1=normal, 2=verbose
-            ParameterDescriptor(
-                type=ParameterType.PARAMETER_INTEGER,
-                description='Debug level: 0=minimal, 1=normal, 2=verbose'
-            )
-        )
-
     def get_parameters_from_ros(self):
         """Get all parameters from ROS parameter server"""
         # RoboClaw communication parameters
@@ -243,6 +140,16 @@ class RoboclawControllerNode(Node):
         self.invert_left_motors = self.get_parameter('invert_left_motors').value
         self.invert_right_motors = self.get_parameter('invert_right_motors').value
         self.debug_level = self.get_parameter('debug_level').value
+        
+        # PID parameters
+        self.pid_p = self.get_parameter('pid_p').value
+        self.pid_i = self.get_parameter('pid_i').value
+        self.pid_d = self.get_parameter('pid_d').value
+        self.pid_qpps = self.get_parameter('pid_qpps').value
+        
+        # Motor direction parameters
+        self.reverse_left_m2 = self.get_parameter('reverse_left_m2').value
+        self.reverse_right_m2 = self.get_parameter('reverse_right_m2').value
         
         # Calculate derived parameters
         # Conversion factor from m/s to encoder counts/s
@@ -289,6 +196,12 @@ class RoboclawControllerNode(Node):
                 
                 # Initialize motor speeds to zero
                 self.stop_all_motors()
+                
+                # Configure PID and motor directions
+                self.configure_pid(self.left_roboclaw, self.left_address)
+                self.configure_pid(self.right_roboclaw, self.right_address)
+                self.configure_motor_directions()
+                
                 return True
             else:
                 if not left_result:
@@ -299,6 +212,88 @@ class RoboclawControllerNode(Node):
                 
         except Exception as e:
             self.get_logger().error(f"Error initializing Roboclaw controllers: {e}")
+            return False
+
+    def configure_pid(self, roboclaw, address, motor_num=None):
+        """Configure PID values for velocity control
+        
+        Args:
+            roboclaw: The Roboclaw instance to configure
+            address: The address of the Roboclaw
+            motor_num: Which motor to configure (1, 2, or None for both)
+        
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            # Convert the PID values to integers after multiplying by 65536
+            p_val = int(self.pid_p * 65536)
+            i_val = int(self.pid_i * 65536)
+            d_val = int(self.pid_d * 65536)
+            qpps = int(self.pid_qpps)
+            
+            results = []
+            
+            # Configure PID for motor 1 if requested
+            if motor_num is None or motor_num == 1:
+                result = roboclaw._write4444(address, roboclaw.Cmd.SETM1PID, 
+                                            p_val, i_val, d_val, qpps)
+                results.append(result)
+                
+                # Read back and log the values to verify
+                pid_values = roboclaw.ReadM1VelocityPID(address)
+                if pid_values[0]:
+                    self.get_logger().info(
+                        f"M1 PID values set to: P={pid_values[1]/65536.0:.4f}, "
+                        f"I={pid_values[2]/65536.0:.4f}, D={pid_values[3]/65536.0:.4f}, "
+                        f"QPPS={pid_values[4]}"
+                    )
+            
+            # Configure PID for motor 2 if requested
+            if motor_num is None or motor_num == 2:
+                result = roboclaw._write4444(address, roboclaw.Cmd.SETM2PID, 
+                                            p_val, i_val, d_val, qpps)
+                results.append(result)
+                
+                # Read back and log the values to verify
+                pid_values = roboclaw.ReadM2VelocityPID(address)
+                if pid_values[0]:
+                    self.get_logger().info(
+                        f"M2 PID values set to: P={pid_values[1]/65536.0:.4f}, "
+                        f"I={pid_values[2]/65536.0:.4f}, D={pid_values[3]/65536.0:.4f}, "
+                        f"QPPS={pid_values[4]}"
+                    )
+            
+            if all(results):
+                self.get_logger().info(f"PID parameters configured successfully for motor{' ' + str(motor_num) if motor_num else 's'}")
+                return True
+            else:
+                self.get_logger().error("Failed to configure some PID parameters")
+                return False
+                
+        except Exception as e:
+            self.get_logger().error(f"Error configuring PID: {e}")
+            return False
+    
+    def configure_motor_directions(self):
+        """Configure motor directions - reverse M2 motors as needed"""
+        try:
+            # Configure motor directions based on parameters
+            if self.reverse_left_m2:
+                self.get_logger().info("Configuring left M2 motor to be reversed")
+                self.left_roboclaw.SetM2Orientation(self.left_address, 1)  # 1 means reversed
+            else:
+                self.left_roboclaw.SetM2Orientation(self.left_address, 0)  # 0 means normal
+                
+            if self.reverse_right_m2:
+                self.get_logger().info("Configuring right M2 motor to be reversed")
+                self.right_roboclaw.SetM2Orientation(self.right_address, 1)  # 1 means reversed
+            else:
+                self.right_roboclaw.SetM2Orientation(self.right_address, 0)  # 0 means normal
+                
+            return True
+        except Exception as e:
+            self.get_logger().error(f"Error configuring motor directions: {e}")
             return False
 
     def differential_drive_to_wheel_velocities(self, linear_x, angular_z):
