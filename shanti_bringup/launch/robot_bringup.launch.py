@@ -7,12 +7,19 @@
 # - Navigation (path planning, obstacle avoidance)
 
 import os
+import time
 import launch
-from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, GroupAction
+from launch.actions import (
+    IncludeLaunchDescription, 
+    DeclareLaunchArgument, 
+    GroupAction,
+    LogInfo,
+    TimerAction
+)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, Command, PathJoinSubstitution
-from launch.conditions import IfCondition, UnlessCondition
-from launch_ros.actions import Node, PushRosNamespace
+from launch.conditions import IfCondition
+from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
@@ -20,9 +27,12 @@ def generate_launch_description():
     base_pkg_dir = get_package_share_directory('differential_drive_base')
     localization_pkg_dir = get_package_share_directory('localization_bringup')
     nav_pkg_dir = get_package_share_directory('nav_bringup')
-    omnivision_pkg_dir = get_package_share_directory('omnivision')
-    lidar_pkg_dir = get_package_share_directory('unitree_lidar_ros2')
+    perception_pkg_dir = get_package_share_directory('perception_bringup')
     robot_pkg_dir = get_package_share_directory('shanti_base')
+    shanti_bringup_pkg_dir = get_package_share_directory('shanti_bringup')
+    
+    # Configuration file path
+    config_file = os.path.join(shanti_bringup_pkg_dir, 'config', 'robot_params.yaml')
     
     # Launch Arguments
     use_sim_time = LaunchConfiguration('use_sim_time')
@@ -32,48 +42,25 @@ def generate_launch_description():
         description='Use simulation time if true'
     )
     
-    debug_mode = LaunchConfiguration('debug')
-    debug_arg = DeclareLaunchArgument(
-        'debug',
+    enable_perception = LaunchConfiguration('enable_perception')
+    enable_perception_arg = DeclareLaunchArgument(
+        'enable_perception',
+        default_value='true',
+        description='Enable perception system'
+    )
+    
+    enable_rviz = LaunchConfiguration('enable_rviz')
+    enable_rviz_arg = DeclareLaunchArgument(
+        'enable_rviz',
+        default_value='true',
+        description='Start RViz for visualization'
+    )
+    
+    enable_teleop = LaunchConfiguration('enable_teleop')
+    enable_teleop_arg = DeclareLaunchArgument(
+        'enable_teleop',
         default_value='false',
-        description='Enable debug logging if true'
-    )
-    
-    # Base configuration arguments
-    left_roboclaw_port = LaunchConfiguration('left_roboclaw_port')
-    right_roboclaw_port = LaunchConfiguration('right_roboclaw_port')
-    baud_rate = LaunchConfiguration('baud_rate')
-    left_address = LaunchConfiguration('left_address')
-    right_address = LaunchConfiguration('right_address')
-    
-    left_roboclaw_port_arg = DeclareLaunchArgument(
-        'left_roboclaw_port',
-        default_value='/dev/ttyACM0',
-        description='Serial port for left Roboclaw controller'
-    )
-    
-    right_roboclaw_port_arg = DeclareLaunchArgument(
-        'right_roboclaw_port',
-        default_value='/dev/ttyACM1',
-        description='Serial port for right Roboclaw controller'
-    )
-    
-    baud_rate_arg = DeclareLaunchArgument(
-        'baud_rate',
-        default_value='38400',
-        description='Baud rate for Roboclaw controllers'
-    )
-    
-    left_address_arg = DeclareLaunchArgument(
-        'left_address',
-        default_value='128',
-        description='Address of left Roboclaw controller'
-    )
-    
-    right_address_arg = DeclareLaunchArgument(
-        'right_address',
-        default_value='128',
-        description='Address of right Roboclaw controller'
+        description='Enable joystick teleop'
     )
     
     # Robot description
@@ -82,22 +69,6 @@ def generate_launch_description():
         'robot_description_file',
         default_value=robot_description_path,
         description='Path to robot URDF/xacro file'
-    )
-    
-    # 1. BASE SYSTEM LAUNCH
-    # ---------------------
-    base_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(base_pkg_dir, 'launch', 'differential_drive.launch.py')
-        ),
-        launch_arguments={
-            'left_roboclaw_port': left_roboclaw_port,
-            'right_roboclaw_port': right_roboclaw_port,
-            'baud_rate': baud_rate,
-            'left_address': left_address,
-            'right_address': right_address,
-            'use_sim_time': use_sim_time
-        }.items()
     )
     
     # Robot state publisher
@@ -111,51 +82,107 @@ def generate_launch_description():
         output='screen'
     )
     
-    # 2. PERCEPTION SYSTEM LAUNCH
-    # ---------------------------
-    # Lidar node
-    lidar_node = Node(
-        package='unitree_lidar_ros2',
-        executable='unitree_lidar_node',
-        name='unitree_lidar_node',
-        output='screen',
-        parameters=[{
-            'frame_id': 'lidar_link',
-            'use_sim_time': use_sim_time
-        }]
+    # 1. BASE SYSTEM LAUNCH
+    # ---------------------
+    # Looking for differential_drive.launch.py in the source directory first
+    base_launch_source_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        'base/differential_drive_base/launch/differential_drive.launch.py'
     )
     
-    # Omnivision cameras (assuming there's a camera launch)
-    camera_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(omnivision_pkg_dir, 'launch', 'omnivision.launch.py')
-        ),
+    # Fall back to the installed package path if not found in source
+    if not os.path.exists(base_launch_source_path):
+        base_launch_source_path = os.path.join(base_pkg_dir, 'launch', 'differential_drive.launch.py')
+    
+    base_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(base_launch_source_path),
         launch_arguments={
-            'use_sim_time': use_sim_time
-        }.items(),
-        condition=IfCondition(LaunchConfiguration('enable_cameras', default='true'))
+            'use_sim_time': use_sim_time,
+            'params_file': config_file
+        }.items()
     )
     
-    # 3. LOCALIZATION SYSTEM LAUNCH
+    # Log message for base startup
+    log_base_start = LogInfo(msg="Starting base controllers...")
+    
+    # 2. PERCEPTION SYSTEM LAUNCH - with delay
+    # ---------------------------
+    perception_launch_source_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        'perception/perception_bringup/launch/dual_perception_system.launch.py'
+    )
+    
+    # Fall back to the installed package path if not found in source
+    if not os.path.exists(perception_launch_source_path):
+        perception_launch_source_path = os.path.join(perception_pkg_dir, 'launch', 'dual_perception_system.launch.py')
+    
+    perception_delayed_action = TimerAction(
+        period=5.0,  # 5 second delay after base starts
+        actions=[
+            LogInfo(msg="Starting perception system..."),
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(perception_launch_source_path),
+                launch_arguments={
+                    'use_sim_time': use_sim_time,
+                    'params_file': config_file,
+                    'front_video_source': LaunchConfiguration('front_video_source', default='0'),
+                    'front_lidar_port': LaunchConfiguration('front_lidar_port', default='/dev/ttyUSB0'),
+                    'rear_video_source': LaunchConfiguration('rear_video_source', default='1'),
+                    'rear_lidar_port': LaunchConfiguration('rear_lidar_port', default='/dev/ttyUSB1')
+                }.items(),
+                condition=IfCondition(enable_perception)
+            )
+        ]
+    )
+    
+    # 3. LOCALIZATION SYSTEM LAUNCH - with delay
     # -----------------------------
-    localization_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(localization_pkg_dir, 'launch', 'integrated_localization.launch.py')
-        ),
-        launch_arguments={
-            'use_sim_time': use_sim_time
-        }.items()
+    localization_launch_source_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        'localization/localization_bringup/launch/integrated_localization.launch.py'
     )
     
-    # 4. NAVIGATION SYSTEM LAUNCH
+    # Fall back to the installed package path if not found in source
+    if not os.path.exists(localization_launch_source_path):
+        localization_launch_source_path = os.path.join(localization_pkg_dir, 'launch', 'integrated_localization.launch.py')
+    
+    localization_delayed_action = TimerAction(
+        period=5.0,  # 5 second delay after base starts
+        actions=[
+            LogInfo(msg="Starting localization system..."),
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(localization_launch_source_path),
+                launch_arguments={
+                    'use_sim_time': use_sim_time,
+                    'params_file': config_file
+                }.items()
+            )
+        ]
+    )
+    
+    # 4. NAVIGATION SYSTEM LAUNCH - with delay
     # ---------------------------
-    navigation_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(nav_pkg_dir, 'launch', 'nav_bringup.launch.py')
-        ),
-        launch_arguments={
-            'use_sim_time': use_sim_time
-        }.items()
+    navigation_launch_source_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        'navigation/nav_bringup/launch/nav_bringup.launch.py'
+    )
+    
+    # Fall back to the installed package path if not found in source
+    if not os.path.exists(navigation_launch_source_path):
+        navigation_launch_source_path = os.path.join(nav_pkg_dir, 'launch', 'nav_bringup.launch.py')
+    
+    navigation_delayed_action = TimerAction(
+        period=15.0,  # 15 second delay to ensure perception and localization are up
+        actions=[
+            LogInfo(msg="Starting navigation system..."),
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(navigation_launch_source_path),
+                launch_arguments={
+                    'use_sim_time': use_sim_time,
+                    'params_file': config_file
+                }.items()
+            )
+        ]
     )
     
     # 5. MONITORING AND DIAGNOSTICS
@@ -168,7 +195,7 @@ def generate_launch_description():
         name='rviz2',
         arguments=['-d', rviz_config_path],
         parameters=[{'use_sim_time': use_sim_time}],
-        condition=IfCondition(LaunchConfiguration('enable_rviz', default='true'))
+        condition=IfCondition(enable_rviz)
     )
     
     # Optional joystick teleop
@@ -176,66 +203,41 @@ def generate_launch_description():
         package='joy',
         executable='joy_node',
         name='joy_node',
-        parameters=[{
-            'device_id': LaunchConfiguration('joy_device', default='0'),
-            'deadzone': 0.1,
-            'autorepeat_rate': 20.0,
-        }],
-        condition=IfCondition(LaunchConfiguration('enable_teleop', default='false'))
+        parameters=[config_file],
+        condition=IfCondition(enable_teleop)
     )
     
     teleop_node = Node(
         package='joystick2base',
         executable='joy2twist',
         name='joy2twist',
-        parameters=[{
-            'linear_axis': 1,
-            'angular_axis': 0,
-            'enable_button': 0,
-            'linear_scale': 0.5,
-            'angular_scale': 1.0
-        }],
+        parameters=[config_file],
         remappings=[('/cmd_vel', '/diff_cont/cmd_vel_unstamped')],
-        condition=IfCondition(LaunchConfiguration('enable_teleop', default='false'))
+        condition=IfCondition(enable_teleop)
     )
     
     # Return the launch description
     return launch.LaunchDescription([
         # Launch arguments
         use_sim_time_arg,
-        debug_arg,
-        left_roboclaw_port_arg,
-        right_roboclaw_port_arg,
-        baud_rate_arg,
-        left_address_arg,
-        right_address_arg,
         robot_description_arg,
+        enable_perception_arg,
+        enable_rviz_arg,
+        enable_teleop_arg,
         
-        # Additional optional feature arguments
-        DeclareLaunchArgument('enable_cameras', default_value='true',
-                             description='Enable camera nodes'),
-        DeclareLaunchArgument('enable_rviz', default_value='true',
-                             description='Start RViz for visualization'),
-        DeclareLaunchArgument('enable_teleop', default_value='false',
-                             description='Enable joystick teleop'),
-        DeclareLaunchArgument('joy_device', default_value='0',
-                             description='Joystick device ID'),
-        
-        # Core systems
+        # Core systems with sequential launch using timers
+        log_base_start,
         robot_state_publisher_node,
         base_launch,
         
-        # Perception systems
-        lidar_node,
-        camera_launch,
+        # Delayed perception and localization systems
+        perception_delayed_action,
+        localization_delayed_action,
         
-        # Localization system
-        localization_launch,
+        # More delayed navigation system
+        navigation_delayed_action,
         
-        # Navigation system
-        navigation_launch,
-        
-        # Optional systems
+        # Optional visualization and teleop
         rviz_node,
         joy_node,
         teleop_node
