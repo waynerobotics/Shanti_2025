@@ -169,6 +169,17 @@ def generate_launch_description():
         launch_arguments={}.items()
     )
 
+    # Rosbridge
+    ros_websocket = launch_ros.actions.Node(
+        package='rosbridge_server',
+        executable='rosbridge_websocket',
+    )
+
+    # Rosapi
+    ros_api = launch_ros.actions.Node(
+        package='rosapi',
+        executable='rosapi_node',
+    )
 
 
     return launch.LaunchDescription([
@@ -199,7 +210,10 @@ def generate_launch_description():
         
         relay_cmd_vel,
         
-        spawn_waypoint_flags
+        spawn_waypoint_flags,
+
+        ros_websocket,
+        ros_api
         ])
 
 
