@@ -177,6 +177,13 @@ def generate_launch_description():
         output='screen'
     )    
     
+    obstacle_detector_node = launch_ros.actions.Node(
+        package='vision3D',
+        executable='obstacle_detection',
+        name='obstacle_detection',
+        output='screen'
+    )    
+
     # Rosbridge
     ros_websocket = launch_ros.actions.Node(
         package='rosbridge_server',
@@ -224,8 +231,11 @@ def generate_launch_description():
         # Add the lane_segmentation_to_pointcloud node here
         lane_segmentation_node,
 
-        ros_websocket,
-        ros_api
+        #run the AI lane detection node. 
+        obstacle_detector_node,
+
+        # ros_websocket,
+        # ros_api
     ])
 
 
