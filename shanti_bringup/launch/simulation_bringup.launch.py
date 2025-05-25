@@ -195,7 +195,8 @@ def generate_launch_description():
 
         rviz_node,
         localization_node,
-        #nav2_bringup_node,  
+        
+        nav2_bringup_node,  
         
         relay_cmd_vel,
         
