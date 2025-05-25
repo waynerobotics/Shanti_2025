@@ -89,7 +89,7 @@ def generate_launch_description():
             '-entity', 'shanti',
             '-topic', 'robot_description',
             '-x', '13', '-y', '35', '-z', '1',  # orig..x,y = 0.  Position (x, y, z)... oakland: '-x', '-20.26', '-y', '24.8', '-z', '3',
-            '-R', '0.0', '-P', '0.0', '-Y', '1.58093'   # Orientation (roll, pitch, yaw) in radians
+            '-R', '0.0', '-P', '0.0', '-Y', '1.58093'   # Orientation (roll, pitch, yaw 1.58093)  in radians
         ],
         output='screen'
     )   
@@ -169,6 +169,14 @@ def generate_launch_description():
         launch_arguments={}.items()
     )
 
+    # Add lane_segmentation_to_pointcloud node
+    lane_segmentation_node = launch_ros.actions.Node(
+        package='vision3D',
+        executable='lane_segmentation_to_pointcloud',
+        name='lane_segmentation_to_pointcloud',
+        output='screen'
+    )    
+    
     # Rosbridge
     ros_websocket = launch_ros.actions.Node(
         package='rosbridge_server',
@@ -206,14 +214,18 @@ def generate_launch_description():
 
         rviz_node,
         localization_node,
-        #nav2_bringup_node,  
+        
+        nav2_bringup_node,  
         
         relay_cmd_vel,
         
         spawn_waypoint_flags,
 
+        # Add the lane_segmentation_to_pointcloud node here
+        lane_segmentation_node,
+
         ros_websocket,
         ros_api
-        ])
+    ])
 
 
