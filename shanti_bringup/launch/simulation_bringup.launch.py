@@ -175,7 +175,20 @@ def generate_launch_description():
         executable='lane_segmentation_to_pointcloud',
         name='lane_segmentation_to_pointcloud',
         output='screen'
+    )    
+    
+    # Rosbridge
+    ros_websocket = launch_ros.actions.Node(
+        package='rosbridge_server',
+        executable='rosbridge_websocket',
     )
+
+    # Rosapi
+    ros_api = launch_ros.actions.Node(
+        package='rosapi',
+        executable='rosapi_node',
+    )
+
 
     return launch.LaunchDescription([
         launch.actions.DeclareLaunchArgument(name='gui', default_value='True',
@@ -209,7 +222,10 @@ def generate_launch_description():
         spawn_waypoint_flags,
 
         # Add the lane_segmentation_to_pointcloud node here
-        lane_segmentation_node
+        lane_segmentation_node,
+
+        ros_websocket,
+        ros_api
     ])
 
 

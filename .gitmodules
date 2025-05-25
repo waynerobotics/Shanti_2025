@@ -4,8 +4,8 @@
 [submodule "practical_robot_tools/Web_UI"]
 	path = practical_robot_tools/Web_UI
 	url = git@github.com:waynerobotics/Web_UI.git
-[submodule "shanti_base/shanti_base/unilidar_sdk"]
-	path = shanti_base/shanti_base/unilidar_sdk
+[submodule "perception/unilidar_sdk"]
+	path = perception/unilidar_sdk
 	url = git@github.com:LordDanielW/unilidar_sdk.git
 [submodule "perception/omnivision"]
 	path = perception/omnivision
