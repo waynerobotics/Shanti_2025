@@ -60,8 +60,8 @@ ExternalProject_Add(
   xspublic
   PREFIX ${CMAKE_BINARY_DIR}/xspublic
   SOURCE_DIR ${CMAKE_SOURCE_DIR}/lib/xspublic
-  CONFIGURE_COMMAND ""  # Skip configure step since we're using the Makefile directly
-  BUILD_COMMAND $(MAKE) -C ${CMAKE_SOURCE_DIR}/lib/xspublic
+  CONFIGURE_COMMAND ""  # No configure step
+  BUILD_COMMAND make
   BUILD_IN_SOURCE 1  # Build in the source directory
   INSTALL_COMMAND ""  # No install step
 )

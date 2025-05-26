@@ -198,6 +198,18 @@ def generate_launch_description():
         condition=IfCondition(enable_rviz)
     )
     
+    # Rosbridge
+    ros_websocket = launch_ros.actions.Node(
+        package='rosbridge_server',
+        executable='rosbridge_websocket',
+    )
+
+    # Rosapi
+    ros_api = launch_ros.actions.Node(
+        package='rosapi',
+        executable='rosapi_node',
+    )
+
     # Optional joystick teleop
     joy_node = Node(
         package='joy',
@@ -239,6 +251,8 @@ def generate_launch_description():
         
         # Optional visualization and teleop
         rviz_node,
+        ros_websocket,
+        ros_api,
         joy_node,
         teleop_node
     ])
