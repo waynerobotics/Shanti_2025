@@ -1,0 +1,168 @@
+# Shanti Robot Configuration Parameters
+# This file contains all parameters for the robot's systems:
+# - Base (differential drive)
+# - Perception (front and rear camera/lidar)
+# - Localization (GPS, IMU, odometry fusion)
+
+/**:
+  ros__parameters:
+    # General parameters
+    use_sim_time: false
+    debug_level: 1
+
+# Base System Parameters
+roboclaw_controller_node:
+  ros__parameters:
+    # Roboclaw communication parameters
+    left_roboclaw_port: '/dev/ttyACM0'
+    right_roboclaw_port: '/dev/ttyACM1'
+    baud_rate: 38400
+    left_address: 128  # 0x80
+    right_address: 128  # 0x80
+    
+    # Robot physical parameters
+    wheel_base: 0.5334  # meters
+    wheel_radius: 0.1016  # meters
+    
+    # Controller parameters
+    max_speed: 1.0  # m/s
+    max_angular_speed: 1.5  # rad/s
+    encoder_cpr: 4096
+    cmd_timeout: 0.5  # seconds
+    invert_left_motors: false
+    invert_right_motors: false
+    timeout: 0.1  # seconds
+    retries: 3
+    
+    # PID parameters
+    pid_p: 1.36
+    pid_i: 0.08
+    pid_d: 0.0
+    pid_qpps: 45540
+    
+    # Motor direction configuration
+    reverse_left_m2: true
+    reverse_right_m2: true
+
+encoder_odometry_node:
+  ros__parameters:
+    wheel_base: 0.5334  # meters
+    wheel_radius: 0.1016  # meters
+    encoder_resolution: 4096
+    serial_port: '/dev/ttyACM2'
+    baud_rate: 115200
+    debug_level: 1
+
+# Front Perception System Parameters
+front:
+  camera_node:
+    ros__parameters:
+      video_source: 0
+      width: 640
+      height: 480
+      fps: 30
+      calibration_file: ""
+      enable_detection: true
+      detection_model: "yolov8n.onnx"
+      detection_confidence: 0.5
+
+  lidar_node:
+    ros__parameters:
+      port: '/dev/ttyUSB0'
+      frame_id: 'front_unilidar_lidar'
+      imu_frame_id: 'front_unilidar_imu'
+      point_cloud_topic: '/front/lidar/points'
+      imu_topic: '/front/lidar/imu'
+
+# Rear Perception System Parameters
+rear:
+  camera_node:
+    ros__parameters:
+      video_source: 1
+      width: 640
+      height: 480
+      fps: 30
+      calibration_file: ""
+      enable_detection: true
+      detection_model: "yolov8n.onnx"
+      detection_confidence: 0.5
+
+  lidar_node:
+    ros__parameters:
+      port: '/dev/ttyUSB1'
+      frame_id: 'rear_unilidar_lidar'
+      imu_frame_id: 'rear_unilidar_imu'
+      point_cloud_topic: '/rear/lidar/points'
+      imu_topic: '/rear/lidar/imu'
+
+# Localization System Parameters
+ekf_filter_node:
+  ros__parameters:
+    frequency: 30.0
+    sensor_timeout: 0.1
+    two_d_mode: true
+    transform_time_offset: 0.0
+    transform_timeout: 0.0
+    print_diagnostics: true
+    debug: false
+    
+    # EKF configuration
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_link
+    world_frame: odom
+    
+    # Sensor inputs
+    odom0: /diff_cont/odom
+    odom0_config: [true, true, false,
+                   false, false, true,
+                   true, true, false,
+                   false, false, true,
+                   false, false, false]
+    odom0_queue_size: 10
+    odom0_differential: false
+    odom0_relative: false
+    
+    imu0: /imu/data
+    imu0_config: [false, false, false,
+                  true, true, true,
+                  false, false, false,
+                  true, true, true,
+                  true, false, false]
+    imu0_queue_size: 10
+    imu0_differential: false
+    imu0_relative: false
+    imu0_remove_gravitational_acceleration: true
+
+navsat_transform_node:
+  ros__parameters:
+    frequency: 30.0
+    delay: 3.0
+    magnetic_declination_radians: 0.0
+    yaw_offset: 0.0
+    zero_altitude: true
+    broadcast_utm_transform: true
+    broadcast_utm_transform_as_parent_frame: true
+    publish_filtered_gps: true
+    use_odometry_yaw: false
+    wait_for_datum: false
+
+# Visualization Parameters
+rviz2:
+  ros__parameters:
+    use_sim_time: false
+
+# Joystick Teleop Parameters
+joy_node:
+  ros__parameters:
+    device_id: 0
+    deadzone: 0.1
+    autorepeat_rate: 20.0
+
+joy2twist:
+  ros__parameters:
+    linear_axis: 1
+    angular_axis: 0
+    enable_button: 0
+    linear_scale: 0.5
+    angular_scale: 1.0
