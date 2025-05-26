@@ -24,6 +24,13 @@ sudo apt install -y \
     ros-humble-rosbridge-server
 ```
 
+#Install Python dependencies for AI/ML modules:
+Make sure you have pip installed, then run:
+
+```bash
+pip install torch transformers
+```
+
 ## Clone a Repository with Submodules
 
 If you clone this repository, you'll need to initialize the submodules after cloning:
