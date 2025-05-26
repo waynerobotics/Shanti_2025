@@ -17,32 +17,24 @@ def generate_launch_description():
     wheel_radius = LaunchConfiguration('wheel_radius', default='0.1016')  # meters
     max_speed = LaunchConfiguration('max_speed', default='1.0')  # m/s
     max_angular_speed = LaunchConfiguration('max_angular_speed', default='1.5')  # rad/s
-    encoder_cpr = LaunchConfiguration('encoder_cpr', default='4096')
+    max_pwm = LaunchConfiguration('max_pwm', default='127')  # maximum PWM value
+    min_pwm = LaunchConfiguration('min_pwm', default='20')  # minimum PWM value
+    pwm_deadband = LaunchConfiguration('pwm_deadband', default='0.05')  # 5% deadband
     debug_level = LaunchConfiguration('debug_level', default='1')
-    timeout = LaunchConfiguration('timeout', default='0.1')  # seconds
-    retries = LaunchConfiguration('retries', default='3')  # number of retries
     
     # Serial port for encoders (separate from Roboclaw controllers)
     encoder_serial_port = LaunchConfiguration('encoder_serial_port', default='/dev/ttyACM2')
     encoder_baud_rate = LaunchConfiguration('encoder_baud_rate', default='115200')
-    
-    # PID parameters
-    pid_kp = LaunchConfiguration('pid_kp', default='1.0')
-    pid_ki = LaunchConfiguration('pid_ki', default='0.0')
-    pid_kd = LaunchConfiguration('pid_kd', default='0.0')
-    
-    # Motor direction configuration
-    left_motor_direction = LaunchConfiguration('left_motor_direction', default='1')
-    right_motor_direction = LaunchConfiguration('right_motor_direction', default='1')
+    encoder_resolution = LaunchConfiguration('encoder_resolution', default='4096')
     
     # Launch Arguments
     launch_args = [
         # Roboclaw communication parameters
         DeclareLaunchArgument('left_roboclaw_port', 
-                              default_value='/dev/ttyACM0',
+                              default_value='/dev/ttyACM2',
                               description='Serial port for the left Roboclaw controller'),
         DeclareLaunchArgument('right_roboclaw_port', 
-                              default_value='/dev/ttyACM1',
+                              default_value='/dev/ttyACM3',
                               description='Serial port for the right Roboclaw controller'),
         DeclareLaunchArgument('baud_rate', 
                               default_value='38400',
@@ -64,23 +56,23 @@ def generate_launch_description():
                               
         # Controller parameters
         DeclareLaunchArgument('max_speed', 
-                              default_value='1.0',
+                              default_value='2.1',
                               description='Maximum linear speed in m/s'),
         DeclareLaunchArgument('max_angular_speed', 
                               default_value='1.5',
                               description='Maximum angular speed in rad/s'),
-        DeclareLaunchArgument('encoder_cpr', 
-                              default_value='1024',
-                              description='Encoder counts per revolution'),
+        DeclareLaunchArgument('max_pwm', 
+                              default_value='127',
+                              description='Maximum PWM value (0-127)'),
+        DeclareLaunchArgument('min_pwm', 
+                              default_value='20',
+                              description='Minimum PWM value to overcome motor stiction'),
+        DeclareLaunchArgument('pwm_deadband', 
+                              default_value='0.05',
+                              description='Percentage of max speed below which motors are stopped'),
         DeclareLaunchArgument('debug_level', 
                               default_value='1',
                               description='Debug level: 0=minimal, 1=normal, 2=verbose'),
-        DeclareLaunchArgument('timeout', 
-                              default_value='0.1',
-                              description='Timeout for Roboclaw communication in seconds'),
-        DeclareLaunchArgument('retries', 
-                              default_value='3',
-                              description='Number of retries for Roboclaw communication'),
                               
         # Encoder odometry parameters
         DeclareLaunchArgument('encoder_serial_port', 
@@ -89,32 +81,16 @@ def generate_launch_description():
         DeclareLaunchArgument('encoder_baud_rate', 
                               default_value='115200',
                               description='Baud rate for encoder serial communication'),
-                              
-        # PID parameters
-        DeclareLaunchArgument('pid_kp', 
-                              default_value='1.0',
-                              description='Proportional gain for PID controller'),
-        DeclareLaunchArgument('pid_ki', 
-                              default_value='0.0',
-                              description='Integral gain for PID controller'),
-        DeclareLaunchArgument('pid_kd', 
-                              default_value='0.0',
-                              description='Derivative gain for PID controller'),
-                              
-        # Motor direction configuration
-        DeclareLaunchArgument('left_motor_direction', 
-                              default_value='1',
-                              description='Direction multiplier for left motor (1 or -1)'),
-        DeclareLaunchArgument('right_motor_direction', 
-                              default_value='1',
-                              description='Direction multiplier for right motor (1 or -1)'),
+        DeclareLaunchArgument('encoder_resolution', 
+                              default_value='4096',
+                              description='Encoder counts per revolution'),
     ]
     
     # Define node actions
-    roboclaw_controller_node = Node(
+    roboclaw_pwm_controller_node = Node(
         package='differential_drive_base',
-        executable='roboclaw_controller',
-        name='roboclaw_controller_node',
+        executable='roboclaw_pwm_controller',
+        name='roboclaw_pwm_controller_node',
         output='screen',
         parameters=[{
             'left_roboclaw_port': left_roboclaw_port,
@@ -126,15 +102,11 @@ def generate_launch_description():
             'wheel_radius': wheel_radius,
             'max_speed': max_speed,
             'max_angular_speed': max_angular_speed,
-            'encoder_cpr': encoder_cpr,
+            'max_pwm': max_pwm,
+            'min_pwm': min_pwm,
+            'pwm_deadband': pwm_deadband,
+            'invert_right_motors': LaunchConfiguration('left_right_direction', default=True),
             'debug_level': debug_level,
-            'timeout': timeout,
-            'retries': retries,
-            'pid_kp': pid_kp,
-            'pid_ki': pid_ki,
-            'pid_kd': pid_kd,
-            'left_motor_direction': left_motor_direction,
-            'right_motor_direction': right_motor_direction,
         }],
     )
     
@@ -146,6 +118,7 @@ def generate_launch_description():
         parameters=[{
             'wheel_base': wheel_base,
             'wheel_radius': wheel_radius,
+            # Convert string to integer for encoder resolution
             'encoder_resolution': 4096,  # Use integer instead of string
             'serial_port': encoder_serial_port,
             'baud_rate': encoder_baud_rate,
@@ -157,7 +130,7 @@ def generate_launch_description():
     return LaunchDescription(
         launch_args + 
         [
-            roboclaw_controller_node,
+            roboclaw_pwm_controller_node,
             encoder_odometry_node,
         ]
     )

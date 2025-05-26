@@ -20,52 +20,38 @@ except ImportError as e:
     raise
 
 
-class RoboclawControllerNode(Node):
+class RoboclawPWMControllerNode(Node):
     """
-    ROS2 node for controlling a differential drive base using two Roboclaw controllers.
+    ROS2 node for controlling a differential drive base using two Roboclaw controllers with PWM.
     Each Roboclaw controls two motors (one on each side of the robot).
     """
     def __init__(self):
-        # Initialize the node BEFORE declaring parameters
-        super().__init__('roboclaw_controller_node')
+        super().__init__('roboclaw_pwm_controller_node')
         
         # Create callback groups for better concurrency
         self.subscription_callback_group = ReentrantCallbackGroup()
         self.service_callback_group = ReentrantCallbackGroup()
         self.timer_callback_group = MutuallyExclusiveCallbackGroup()
         
-        # Instead of using declare_parameters(), declare parameters directly
-        # RoboClaw communication parameters
+        # Declare parameters directly instead of through a method
         self.declare_parameter('left_roboclaw_port', '/dev/ttyACM0')
         self.declare_parameter('right_roboclaw_port', '/dev/ttyACM1')
         self.declare_parameter('baud_rate', 38400)
         self.declare_parameter('left_address', 0x80)
         self.declare_parameter('right_address', 0x80)
-        
-        # Robot physical parameters
         self.declare_parameter('wheel_base', 0.5334)
         self.declare_parameter('wheel_radius', 0.1016)
-        
-        # Controller parameters
         self.declare_parameter('max_speed', 1.0)
         self.declare_parameter('max_angular_speed', 1.5)
-        self.declare_parameter('encoder_cpr', 4096)
+        self.declare_parameter('max_pwm', 127)
+        self.declare_parameter('min_pwm', 20)
         self.declare_parameter('cmd_timeout', 0.5)
         self.declare_parameter('invert_left_motors', False)
         self.declare_parameter('invert_right_motors', False)
         self.declare_parameter('timeout', 0.1)
         self.declare_parameter('retries', 3)
+        self.declare_parameter('pwm_deadband', 0.05)
         self.declare_parameter('debug_level', 1)
-        
-        # PID parameters
-        self.declare_parameter('pid_p', 1.36)
-        self.declare_parameter('pid_i', 0.08)
-        self.declare_parameter('pid_d', 0.0)
-        self.declare_parameter('pid_qpps', 45540)
-        
-        # Motor direction parameters - specify which motors need to be reversed
-        self.declare_parameter('reverse_left_m2', True)
-        self.declare_parameter('reverse_right_m2', True)
         
         # Get parameters from ROS
         self.get_parameters_from_ros()
@@ -115,7 +101,7 @@ class RoboclawControllerNode(Node):
             callback_group=self.timer_callback_group
         )
         
-        self.get_logger().info('Roboclaw controller node initialized')
+        self.get_logger().info('Roboclaw PWM controller node initialized')
 
     def get_parameters_from_ros(self):
         """Get all parameters from ROS parameter server"""
@@ -135,25 +121,13 @@ class RoboclawControllerNode(Node):
         # Controller parameters
         self.max_speed = self.get_parameter('max_speed').value
         self.max_angular_speed = self.get_parameter('max_angular_speed').value
-        self.encoder_cpr = self.get_parameter('encoder_cpr').value
+        self.max_pwm = self.get_parameter('max_pwm').value
+        self.min_pwm = self.get_parameter('min_pwm').value
         self.cmd_timeout = self.get_parameter('cmd_timeout').value
         self.invert_left_motors = self.get_parameter('invert_left_motors').value
         self.invert_right_motors = self.get_parameter('invert_right_motors').value
+        self.pwm_deadband = self.get_parameter('pwm_deadband').value
         self.debug_level = self.get_parameter('debug_level').value
-        
-        # PID parameters
-        self.pid_p = self.get_parameter('pid_p').value
-        self.pid_i = self.get_parameter('pid_i').value
-        self.pid_d = self.get_parameter('pid_d').value
-        self.pid_qpps = self.get_parameter('pid_qpps').value
-        
-        # Motor direction parameters
-        self.reverse_left_m2 = self.get_parameter('reverse_left_m2').value
-        self.reverse_right_m2 = self.get_parameter('reverse_right_m2').value
-        
-        # Calculate derived parameters
-        # Conversion factor from m/s to encoder counts/s
-        self.velocity_to_qpps = self.encoder_cpr / (2.0 * math.pi * self.wheel_radius)
         
         # Set log level based on debug parameter
         if self.debug_level <= 0:
@@ -165,7 +139,7 @@ class RoboclawControllerNode(Node):
             
         self.get_logger().info(f"Robot parameters: wheel_base={self.wheel_base}m, wheel_radius={self.wheel_radius}m")
         self.get_logger().info(f"Max speed: linear={self.max_speed}m/s, angular={self.max_angular_speed}rad/s")
-        self.get_logger().info(f"Velocity conversion factor: {self.velocity_to_qpps} counts per m/s")
+        self.get_logger().info(f"PWM range: min={self.min_pwm}, max={self.max_pwm}")
 
     def init_roboclaw_controllers(self):
         """Initialize both Roboclaw controllers"""
@@ -194,14 +168,8 @@ class RoboclawControllerNode(Node):
                 if right_version[0]:
                     self.get_logger().info(f"Right Roboclaw firmware version: {right_version[1]}")
                 
-                # Initialize motor speeds to zero
+                # Initialize motor PWM to zero
                 self.stop_all_motors()
-                
-                # Configure PID and motor directions
-                self.configure_pid(self.left_roboclaw, self.left_address)
-                self.configure_pid(self.right_roboclaw, self.right_address)
-                self.configure_motor_directions()
-                
                 return True
             else:
                 if not left_result:
@@ -214,92 +182,8 @@ class RoboclawControllerNode(Node):
             self.get_logger().error(f"Error initializing Roboclaw controllers: {e}")
             return False
 
-    def configure_pid(self, roboclaw, address, motor_num=None):
-        """Configure PID values for velocity control
-        
-        Args:
-            roboclaw: The Roboclaw instance to configure
-            address: The address of the Roboclaw
-            motor_num: Which motor to configure (1, 2, or None for both)
-        
-        Returns:
-            bool: True if successful, False otherwise
-        """
-        try:
-            # Convert the PID values to integers after multiplying by 65536
-            p_val = int(self.pid_p * 65536)
-            i_val = int(self.pid_i * 65536)
-            d_val = int(self.pid_d * 65536)
-            qpps = int(self.pid_qpps)
-            
-            results = []
-            
-            # Configure PID for motor 1 if requested
-            if motor_num is None or motor_num == 1:
-                result = roboclaw._write4444(address, roboclaw.Cmd.SETM1PID, 
-                                            p_val, i_val, d_val, qpps)
-                results.append(result)
-                
-                # Read back and log the values to verify
-                pid_values = roboclaw.ReadM1VelocityPID(address)
-                if pid_values[0]:
-                    self.get_logger().info(
-                        f"M1 PID values set to: P={pid_values[1]/65536.0:.4f}, "
-                        f"I={pid_values[2]/65536.0:.4f}, D={pid_values[3]/65536.0:.4f}, "
-                        f"QPPS={pid_values[4]}"
-                    )
-            
-            # Configure PID for motor 2 if requested
-            if motor_num is None or motor_num == 2:
-                result = roboclaw._write4444(address, roboclaw.Cmd.SETM2PID, 
-                                            p_val, i_val, d_val, qpps)
-                results.append(result)
-                
-                # Read back and log the values to verify
-                pid_values = roboclaw.ReadM2VelocityPID(address)
-                if pid_values[0]:
-                    self.get_logger().info(
-                        f"M2 PID values set to: P={pid_values[1]/65536.0:.4f}, "
-                        f"I={pid_values[2]/65536.0:.4f}, D={pid_values[3]/65536.0:.4f}, "
-                        f"QPPS={pid_values[4]}"
-                    )
-            
-            if all(results):
-                self.get_logger().info(f"PID parameters configured successfully for motor{' ' + str(motor_num) if motor_num else 's'}")
-                return True
-            else:
-                self.get_logger().error("Failed to configure some PID parameters")
-                return False
-                
-        except Exception as e:
-            self.get_logger().error(f"Error configuring PID: {e}")
-            return False
-    
-    def configure_motor_directions(self):
-        """Configure motor directions - reverse M2 motors as needed using firmware commands
-        
-        Instead of using SetM2Orientation (which doesn't exist), we'll modify the 
-        differential_drive_to_wheel_velocities method to handle reversals
-        """
-        try:
-            # Log that we're configuring motor directions
-            if self.reverse_left_m2:
-                self.get_logger().info("Left M2 motor will be reversed through velocity calculations")
-            
-            if self.reverse_right_m2:
-                self.get_logger().info("Right M2 motor will be reversed through velocity calculations")
-            
-            # Store motor reversal settings to be used when setting velocities
-            self._reverse_left_m2 = self.reverse_left_m2
-            self._reverse_right_m2 = self.reverse_right_m2
-            
-            return True
-        except Exception as e:
-            self.get_logger().error(f"Error configuring motor directions: {e}")
-            return False
-
-    def differential_drive_to_wheel_velocities(self, linear_x, angular_z):
-        """Convert linear and angular velocities to individual wheel velocities"""
+    def differential_drive_to_wheel_pwm(self, linear_x, angular_z):
+        """Convert linear and angular velocities to individual wheel PWM values"""
         # Apply simple differential drive kinematics
         # v_l = linear_x - (angular_z * wheel_base / 2)
         # v_r = linear_x + (angular_z * wheel_base / 2)
@@ -308,9 +192,16 @@ class RoboclawControllerNode(Node):
         linear_x = max(min(linear_x, self.max_speed), -self.max_speed)
         angular_z = max(min(angular_z, self.max_angular_speed), -self.max_angular_speed)
         
-        # Calculate wheel velocities
-        left_wheel_vel = linear_x - (angular_z * self.wheel_base / 2.0)
-        right_wheel_vel = linear_x + (angular_z * self.wheel_base / 2.0)
+        # Calculate wheel velocities - THIS IS THE KEY PART FOR TURNING
+        wheel_distance = self.wheel_base / 2.0
+        left_wheel_vel = linear_x - (angular_z * wheel_distance) / self.wheel_radius
+        right_wheel_vel = linear_x + (angular_z * wheel_distance) / self.wheel_radius
+        
+
+        self.get_logger().debug(
+            f"Raw wheel velocities: left={left_wheel_vel:.3f}, right={right_wheel_vel:.3f} for "
+            f"linear={linear_x:.2f}, angular={angular_z:.2f}"
+        )
         
         # Apply motor inversions if configured
         if self.invert_left_motors:
@@ -318,53 +209,80 @@ class RoboclawControllerNode(Node):
         if self.invert_right_motors:
             right_wheel_vel = -right_wheel_vel
             
-        # Convert m/s to encoder counts/s
-        left_qpps = int(left_wheel_vel * self.velocity_to_qpps)
-        right_qpps = int(right_wheel_vel * self.velocity_to_qpps)
+        # Convert velocities to PWM values (linear scaling)
+        # First, calculate the percentage of max speed for each wheel
+        # Use the maximum of max_speed and max_angular_speed*wheel_base/2 for better scaling
+        effective_max = max(self.max_speed, self.max_angular_speed * wheel_distance)
         
-        # Handle M2 motor reversals with different speed values rather than trying to use non-existent orientation commands
-        left_m1_qpps = left_qpps
-        left_m2_qpps = left_qpps
-        if hasattr(self, '_reverse_left_m2') and self._reverse_left_m2:
-            left_m2_qpps = -left_m2_qpps
+        left_percent = left_wheel_vel / effective_max
+        right_percent = right_wheel_vel / effective_max
+        
+        # Apply deadband - if percentage is less than deadband, set to 0
+        if abs(left_percent) < self.pwm_deadband:
+            left_percent = 0.0
+        if abs(right_percent) < self.pwm_deadband:
+            right_percent = 0.0
+        
+        # Calculate PWM values with min_pwm offset for non-zero values
+        # Directly scale to the full Roboclaw duty range (-32767 to 32767)
+        max_duty = 32767
+        min_duty = int(max_duty * (self.min_pwm / self.max_pwm))
+        
+        left_pwm = 0
+        if left_percent != 0:
+            # Scale between min_duty and max_duty
+            left_pwm_magnitude = min_duty + abs(left_percent) * (max_duty - min_duty)
+            left_pwm = int(math.copysign(left_pwm_magnitude, left_percent))
             
-        right_m1_qpps = right_qpps
-        right_m2_qpps = right_qpps
-        if hasattr(self, '_reverse_right_m2') and self._reverse_right_m2:
-            right_m2_qpps = -right_m2_qpps
+        right_pwm = 0
+        if right_percent != 0:
+            # Scale between min_duty and max_duty
+            right_pwm_magnitude = min_duty + abs(right_percent) * (max_duty - min_duty)
+            right_pwm = int(math.copysign(right_pwm_magnitude, right_percent))
         
-        return left_m1_qpps, left_m2_qpps, right_m1_qpps, right_m2_qpps
+        # Log the conversion for debugging
+        if self.debug_level >= 2:
+            self.get_logger().debug(
+                f"Wheel velocities: left={left_wheel_vel:.3f}, right={right_wheel_vel:.3f} | "
+                f"Effective max: {effective_max:.3f} | "
+                f"Percentages: left={left_percent:.3f}, right={right_percent:.3f} | "
+                f"PWM values: left={left_pwm}, right={right_pwm}"
+            )
+        
+        return left_pwm, right_pwm
 
-    def set_left_motors_velocity(self, velocity_qpps):
-        """Set velocity for both motors on left side (controlled by left Roboclaw)"""
+    def set_left_motors_pwm(self, pwm_value):
+        """Set PWM for both motors on left side (controlled by left Roboclaw)"""
         try:
-            # Set motor 1 velocity directly
-            self.left_roboclaw.SpeedM1(self.left_address, velocity_qpps)
+            # Use DutyM1 directly with the scaled PWM value
+            # PWM value should already be in the correct range (-32767 to 32767)
+            self.left_roboclaw.DutyM1(self.left_address, pwm_value)
             
-            # Reverse direction for motor 2
-            self.left_roboclaw.SpeedM2(self.left_address, -velocity_qpps)
+            # For Motor 2 - reverse the direction
+            self.left_roboclaw.DutyM2(self.left_address, -pwm_value)
             
             if self.debug_level >= 2:
-                self.get_logger().debug(f"Set left motors velocity to M1:{velocity_qpps}, M2:{-velocity_qpps} qpps")
+                self.get_logger().debug(f"Set left motors PWM to M1:{pwm_value}, M2:{-pwm_value}")
             return True
         except Exception as e:
-            self.get_logger().error(f"Error setting left motors velocity: {e}")
+            self.get_logger().error(f"Error setting left motors PWM: {e}")
             return False
 
-    def set_right_motors_velocity(self, velocity_qpps):
-        """Set velocity for both motors on right side (controlled by right Roboclaw)"""
+    def set_right_motors_pwm(self, pwm_value):
+        """Set PWM for both motors on right side (controlled by right Roboclaw)"""
         try:
-            # Set motor 1 velocity directly
-            self.right_roboclaw.SpeedM1(self.right_address, velocity_qpps)
+            # Use DutyM1 directly with the scaled PWM value
+            # PWM value should already be in the correct range (-32767 to 32767)
+            self.right_roboclaw.DutyM1(self.right_address, pwm_value)
             
-            # Reverse direction for motor 2
-            self.right_roboclaw.SpeedM2(self.right_address, -velocity_qpps)
+            # For Motor 2 - reverse the direction
+            self.right_roboclaw.DutyM2(self.right_address, -pwm_value)
             
             if self.debug_level >= 2:
-                self.get_logger().debug(f"Set right motors velocity to M1:{velocity_qpps}, M2:{-velocity_qpps} qpps")
+                self.get_logger().debug(f"Set right motors PWM to M1:{pwm_value}, M2:{-pwm_value}")
             return True
         except Exception as e:
-            self.get_logger().error(f"Error setting right motors velocity: {e}")
+            self.get_logger().error(f"Error setting right motors PWM: {e}")
             return False
 
     def cmd_vel_callback(self, msg):
@@ -373,22 +291,24 @@ class RoboclawControllerNode(Node):
             # Update timestamp for watchdog
             self.last_cmd_time = self.get_clock().now()
             
-            # Convert to wheel velocities - now returns separate speeds for M1 and M2 motors
-            left_m1_qpps, left_m2_qpps, right_m1_qpps, right_m2_qpps = self.differential_drive_to_wheel_velocities(
+            # Log the incoming command
+            self.get_logger().debug(f"Received cmd_vel: linear.x={msg.linear.x:.2f}, angular.z={msg.angular.z:.2f}")
+            
+            # Convert to wheel PWM values
+            left_pwm, right_pwm = self.differential_drive_to_wheel_pwm(
                 msg.linear.x, msg.angular.z)
             
-            # Apply to motors with the individual motor speeds
-            left_success = self.set_left_motors_velocity(left_m1_qpps)
-            right_success = self.set_right_motors_velocity(right_m1_qpps)
+            # Apply to motors
+            left_success = self.set_left_motors_pwm(left_pwm)
+            right_success = self.set_right_motors_pwm(right_pwm)
             
             if self.debug_level >= 1:
                 self.get_logger().debug(
                     f"CMD_VEL: linear={msg.linear.x:.2f} m/s, angular={msg.angular.z:.2f} rad/s -> "
-                    f"left_m1={left_m1_qpps} qpps, left_m2={left_m2_qpps} qpps, "
-                    f"right_m1={right_m1_qpps} qpps, right_m2={right_m2_qpps} qpps")
+                    f"left_pwm={left_pwm}, right_pwm={right_pwm}")
             
             if not (left_success and right_success):
-                self.get_logger().warning("Failed to set some motor velocities")
+                self.get_logger().warning("Failed to set some motor PWM values")
 
     def watchdog_callback(self):
         """Watchdog callback to stop motors if no cmd_vel received for a while"""
@@ -404,13 +324,13 @@ class RoboclawControllerNode(Node):
     def stop_all_motors(self):
         """Stop all motors on both controllers"""
         try:
-            # Stop left motors - using SpeedM1/M2 with zero speed
-            self.left_roboclaw.SpeedM1(self.left_address, 0)
-            self.left_roboclaw.SpeedM2(self.left_address, 0)
+            # Stop left motors using DutyM1/M2 with zero value
+            self.left_roboclaw.DutyM1(self.left_address, 0)
+            self.left_roboclaw.DutyM2(self.left_address, 0)
             
-            # Stop right motors
-            self.right_roboclaw.SpeedM1(self.right_address, 0)
-            self.right_roboclaw.SpeedM2(self.right_address, 0)
+            # Stop right motors using DutyM1/M2 with zero value
+            self.right_roboclaw.DutyM1(self.right_address, 0)
+            self.right_roboclaw.DutyM2(self.right_address, 0)
             
             self.get_logger().info("All motors stopped")
             return True
@@ -451,11 +371,11 @@ class RoboclawControllerNode(Node):
 
     def publish_heartbeat(self):
         """Publish heartbeat information to show the node is running"""
-        self.get_logger().info("Roboclaw controller node is running")
+        self.get_logger().info("Roboclaw PWM controller node is running")
 
     def shutdown(self):
         """Clean shutdown of the node"""
-        self.get_logger().info("Shutting down Roboclaw controller node")
+        self.get_logger().info("Shutting down Roboclaw PWM controller node")
         
         # Stop all motors
         self.stop_all_motors()
@@ -474,7 +394,7 @@ def main(args=None):
     rclpy.init(args=args)
     
     try:
-        node = RoboclawControllerNode()
+        node = RoboclawPWMControllerNode()
         
         # Use a MultiThreadedExecutor for better performance
         from rclpy.executors import MultiThreadedExecutor
@@ -490,7 +410,7 @@ def main(args=None):
             node.shutdown()
             node.destroy_node()
     except Exception as e:
-        print(f"Error in Roboclaw controller node: {e}")
+        print(f"Error in Roboclaw PWM controller node: {e}")
     finally:
         # Ensure ROS is shut down properly
         rclpy.shutdown()
