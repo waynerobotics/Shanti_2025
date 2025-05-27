@@ -64,7 +64,8 @@ def generate_launch_description():
     )
     
     # Robot description
-    robot_description_path = os.path.join(robot_pkg_dir, 'description/shanti_6w_lidar_description.urdf')
+    robot_description_path = os.path.join(robot_pkg_dir, 'description/shanti_6w_lidar_description_real.urdf')
+    print(f"Using robot description file: {robot_description_path}")
     robot_description_arg = DeclareLaunchArgument(
         'robot_description_file',
         default_value=robot_description_path,
