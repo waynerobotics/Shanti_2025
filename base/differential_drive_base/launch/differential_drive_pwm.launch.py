@@ -162,7 +162,7 @@ def generate_launch_description():
         launch_args + 
         [
             roboclaw_pwm_controller_node,
-            encoder_odometry_node,
+            #        encoder_odometry_node,
             joy_node,
             joy2twist_node,
         ]

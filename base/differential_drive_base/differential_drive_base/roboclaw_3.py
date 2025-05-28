@@ -1075,8 +1075,15 @@ class Roboclaw:
 		
 	def Open(self):
 		try:
-			self._port = serial.Serial(port=self.comport, baudrate=self.rate, timeout=1, interCharTimeout=self.timeout)
-		except:
+			self._port = serial.Serial(
+				port=self.comport,
+				baudrate=self.rate,
+				timeout=1,
+				write_timeout=1,
+				interCharTimeout=self.timeout
+			)
+		except Exception as e:
+			print(f"Error opening serial port: {e}")
 			return 0
 		return 1
 
