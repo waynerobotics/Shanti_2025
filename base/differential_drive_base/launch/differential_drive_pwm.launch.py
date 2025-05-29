@@ -16,7 +16,7 @@ def generate_launch_description():
     wheel_base = LaunchConfiguration('wheel_base', default='0.5334')  # meters
     wheel_radius = LaunchConfiguration('wheel_radius', default='0.1016')  # meters
     max_speed = LaunchConfiguration('max_speed', default='1.0')  # m/s
-    max_angular_speed = LaunchConfiguration('max_angular_speed', default='1.5')  # rad/s
+    max_angular_speed = LaunchConfiguration('max_angular_speed', default='5.5')  # rad/s
     max_pwm = LaunchConfiguration('max_pwm', default='127')  # maximum PWM value
     min_pwm = LaunchConfiguration('min_pwm', default='20')  # minimum PWM value
     pwm_deadband = LaunchConfiguration('pwm_deadband', default='0.05')  # 5% deadband
@@ -76,7 +76,7 @@ def generate_launch_description():
                               
         # Encoder odometry parameters
         DeclareLaunchArgument('encoder_serial_port', 
-                              default_value='/dev/ttyACM2',
+                              default_value='/dev/ttyACM0',
                               description='Serial port for encoder readings'),
         DeclareLaunchArgument('encoder_baud_rate', 
                               default_value='115200',
@@ -131,6 +131,6 @@ def generate_launch_description():
         launch_args + 
         [
             roboclaw_pwm_controller_node,
-            encoder_odometry_node,
+#            encoder_odometry_node,
         ]
     )

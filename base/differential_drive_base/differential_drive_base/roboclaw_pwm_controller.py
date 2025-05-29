@@ -194,10 +194,9 @@ class RoboclawPWMControllerNode(Node):
         
         # Calculate wheel velocities - THIS IS THE KEY PART FOR TURNING
         wheel_distance = self.wheel_base / 2.0
-        left_wheel_vel = linear_x - (angular_z * wheel_distance) / self.wheel_radius
-        right_wheel_vel = linear_x + (angular_z * wheel_distance) / self.wheel_radius
+        left_wheel_vel = linear_x - (angular_z * wheel_distance)
+        right_wheel_vel = linear_x + (angular_z * wheel_distance)
         
-
         self.get_logger().debug(
             f"Raw wheel velocities: left={left_wheel_vel:.3f}, right={right_wheel_vel:.3f} for "
             f"linear={linear_x:.2f}, angular={angular_z:.2f}"
@@ -214,8 +213,12 @@ class RoboclawPWMControllerNode(Node):
         # Use the maximum of max_speed and max_angular_speed*wheel_base/2 for better scaling
         effective_max = max(self.max_speed, self.max_angular_speed * wheel_distance)
         
-        left_percent = left_wheel_vel / effective_max
-        right_percent = right_wheel_vel / effective_max
+        # Ensure we don't divide by zero
+        if effective_max == 0:
+            effective_max = 0.001
+            
+        left_percent = max(min(left_wheel_vel / effective_max, 1.0), -1.0)  # Clamp between -1.0 and 1.0
+        right_percent = max(min(right_wheel_vel / effective_max, 1.0), -1.0)  # Clamp between -1.0 and 1.0
         
         # Apply deadband - if percentage is less than deadband, set to 0
         if abs(left_percent) < self.pwm_deadband:
@@ -224,21 +227,35 @@ class RoboclawPWMControllerNode(Node):
             right_percent = 0.0
         
         # Calculate PWM values with min_pwm offset for non-zero values
-        # Directly scale to the full Roboclaw duty range (-32767 to 32767)
-        max_duty = 32767
-        min_duty = int(max_duty * (self.min_pwm / self.max_pwm))
+        # The Roboclaw accepts duty cycle values from -32767 to 32767
+        MAX_DUTY = 32767
         
+        # Calculate minimum duty based on min_pwm parameter as a percentage of max_pwm
+        min_duty_percent = self.min_pwm / self.max_pwm
+        MIN_DUTY = int(MAX_DUTY * min_duty_percent)
+        
+        # Initialize PWM values to zero
         left_pwm = 0
-        if left_percent != 0:
-            # Scale between min_duty and max_duty
-            left_pwm_magnitude = min_duty + abs(left_percent) * (max_duty - min_duty)
-            left_pwm = int(math.copysign(left_pwm_magnitude, left_percent))
-            
         right_pwm = 0
+        
+        # Only calculate non-zero PWM if percent is non-zero
+        if left_percent != 0:
+            # Scale between MIN_DUTY and MAX_DUTY
+            if left_percent > 0:
+                left_pwm = MIN_DUTY + int((MAX_DUTY - MIN_DUTY) * left_percent)
+            else:
+                left_pwm = -MIN_DUTY + int((MAX_DUTY - MIN_DUTY) * left_percent)
+            # Ensure we never exceed limits
+            left_pwm = max(min(left_pwm, MAX_DUTY), -MAX_DUTY)
+            
         if right_percent != 0:
-            # Scale between min_duty and max_duty
-            right_pwm_magnitude = min_duty + abs(right_percent) * (max_duty - min_duty)
-            right_pwm = int(math.copysign(right_pwm_magnitude, right_percent))
+            # Scale between MIN_DUTY and MAX_DUTY
+            if right_percent > 0:
+                right_pwm = MIN_DUTY + int((MAX_DUTY - MIN_DUTY) * right_percent)
+            else:
+                right_pwm = -MIN_DUTY + int((MAX_DUTY - MIN_DUTY) * right_percent)
+            # Ensure we never exceed limits
+            right_pwm = max(min(right_pwm, MAX_DUTY), -MAX_DUTY)
         
         # Log the conversion for debugging
         if self.debug_level >= 2:
