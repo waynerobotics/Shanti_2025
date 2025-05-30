@@ -14,6 +14,8 @@ setup(
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'launch'),
             glob(os.path.join('launch', '*launch.[pxy][yma]*'))),
+        (os.path.join('share', package_name, 'msg'),
+            glob(os.path.join('msg', '*.msg'))),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -30,6 +32,7 @@ setup(
             'roboclaw_pwm_controller = differential_drive_base.roboclaw_pwm_controller:main',
             'single_roboclaw_controller = differential_drive_base.single_roboclaw_controller:main',
             'differential_drive_controller = differential_drive_base.differential_drive_controller:main',
+            'diff_drive_please=differential_drive_base.diff_drive_please:main',
         ],
     },
     py_modules=['differential_drive_base.roboclaw_3'],  # Explicitly include the roboclaw_3 module

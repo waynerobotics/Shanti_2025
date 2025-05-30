@@ -22,7 +22,7 @@ def generate_launch_description():
             # NTRIP Server Configuration
             'host': '3.143.243.81',  # Change to the IP address of Your NTRIP caster
             'port': 2101,          # Change to your port number, WGS84
-            'mountpoint': 'WAYNEROBOTICS',  # Your NTRIP mountpoint
+            'mountpoint': 'fahnerfarms',  # Your NTRIP mountpoint
             'username': 'roboticsclub-at-wayne-d-edu',     # Your NTRIP username
             'password': 'none',     # Your NTRIP password
 

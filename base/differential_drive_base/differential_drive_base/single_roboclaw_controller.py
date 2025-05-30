@@ -163,6 +163,7 @@ class SingleRoboclawControllerNode(Node):
                 if hasattr(self, 'roboclaw') and hasattr(self.roboclaw, '_port') and self.roboclaw._port.is_open:
                     try:
                         self.roboclaw._port.close()
+                        time.sleep(0.1)  # Give the OS a moment to release the port
                         self.get_logger().info("Closed existing port before reconnecting")
                     except Exception as e:
                         self.get_logger().error(f"Error closing existing port: {e}")
@@ -176,10 +177,18 @@ class SingleRoboclawControllerNode(Node):
                 # Apply Linux-specific serial optimizations
                 if sys.platform == 'linux' and hasattr(self.roboclaw, '_port'):
                     try:
+                        # Set low latency flag for better responsiveness
                         self.roboclaw._port.low_latency = True
-                        self.get_logger().info("Applied low_latency flag to serial port")
+                        
+                        # Disable exclusive access to allow reconnection
+                        self.roboclaw._port.exclusive = False
+                        
+                        # Adjust serial parameters
+                        self.roboclaw._port.inter_byte_timeout = 0.01  # Short inter-byte timeout
+                        
+                        self.get_logger().info("Applied serial port optimizations")
                     except Exception as e:
-                        self.get_logger().warn(f"Could not set low_latency mode: {e}")
+                        self.get_logger().warn(f"Could not set serial port optimizations: {e}")
                 
                 if result:
                     self.get_logger().info("Successfully connected to Roboclaw controller")
@@ -301,17 +310,62 @@ class SingleRoboclawControllerNode(Node):
             
             if motor1_pwm is not None:
                 success1 = roboclaw.DutyM1(address, motor1_pwm)
+                
+                # Check for errors if command failed
+                if not success1:
+                    try:
+                        error_status = roboclaw.ReadError(address)[1]
+                        if error_status != 0:
+                            error_msg = self.decode_roboclaw_error(error_status)
+                            self.get_logger().error(f"Motor 1 PWM error: {error_msg} (code: {error_status:#x})")
+                    except Exception as err:
+                        self.get_logger().error(f"Failed to read error status after Motor 1 PWM failure: {err}")
             
             if motor2_pwm is not None:
                 success2 = roboclaw.DutyM2(address, motor2_pwm)
+                
+                # Check for errors if command failed
+                if not success2:
+                    try:
+                        error_status = roboclaw.ReadError(address)[1]
+                        if error_status != 0:
+                            error_msg = self.decode_roboclaw_error(error_status)
+                            self.get_logger().error(f"Motor 2 PWM error: {error_msg} (code: {error_status:#x})")
+                    except Exception as err:
+                        self.get_logger().error(f"Failed to read error status after Motor 2 PWM failure: {err}")
             
             if success1 and success2:
+                # Successful operation - reset error counter
+                self.consecutive_errors = 0
                 return True
             else:
-                self.get_logger().warn(f"PWM command failed: motor1={not success1 if motor1_pwm is not None else 'not set'}, motor2={not success2 if motor2_pwm is not None else 'not set'}")
+                # Increment error counter on command failures
+                self.consecutive_errors += 1
+                self.get_logger().warn(f"PWM command failed: motor1={not success1 if motor1_pwm is not None else 'not set'}, motor2={not success2 if motor2_pwm is not None else 'not set'}, error count: {self.consecutive_errors}")
+                
+                # If too many failures, mark the connection as broken
+                if self.consecutive_errors >= self.max_consecutive_errors:
+                    with self.connection_lock:
+                        if self.connected:
+                            self.connected = False
+                            self.publish_connection_status()
+                            self.get_logger().error(f"Connection marked as broken after {self.consecutive_errors} PWM failures")
+                            self.schedule_reconnect()
+                
                 return False
         except Exception as e:
-            self.get_logger().error(f"PWM command error: {e}")
+            self.consecutive_errors += 1
+            self.get_logger().error(f"PWM command error: {e}, error count: {self.consecutive_errors}")
+            
+            # If too many failures, mark the connection as broken
+            if self.consecutive_errors >= self.max_consecutive_errors:
+                with self.connection_lock:
+                    if self.connected:
+                        self.connected = False
+                        self.publish_connection_status()
+                        self.get_logger().error(f"Connection marked as broken after {self.consecutive_errors} errors")
+                        self.schedule_reconnect()
+            
             return False
 
     def motor1_pwm_callback(self, msg):
@@ -347,29 +401,39 @@ class SingleRoboclawControllerNode(Node):
         if not self.connected:
             return
             
-        now = self.get_clock().now()
-        
-        # Check motor 1
-        time_diff_m1 = (now - self.motor1_last_cmd_time).nanoseconds / 1e9
-        if time_diff_m1 > self.motor_timeout:
-            # No recent command, stop motor 1
-            if self.debug_level >= 1:
-                self.get_logger().debug(f"Motor 1 watchdog timeout after {time_diff_m1:.2f}s, stopping")
+        try:
+            now = self.get_clock().now()
             
-            # Use the same lock as in set_motor1_pwm
-            with self.serial_lock:
-                self.set_motor1_pwm(0)
-        
-        # Check motor 2
-        time_diff_m2 = (now - self.motor2_last_cmd_time).nanoseconds / 1e9
-        if time_diff_m2 > self.motor_timeout:
-            # No recent command, stop motor 2
-            if self.debug_level >= 1:
-                self.get_logger().debug(f"Motor 2 watchdog timeout after {time_diff_m2:.2f}s, stopping")
+            # Check motor 1
+            time_diff_m1 = (now - self.motor1_last_cmd_time).nanoseconds / 1e9
+            if time_diff_m1 > self.motor_timeout:
+                # No recent command, stop motor 1
+                if self.debug_level >= 1:
+                    self.get_logger().debug(f"Motor 1 watchdog timeout after {time_diff_m1:.2f}s, stopping")
+                
+                # Use the same lock as in set_motor1_pwm
+                try:
+                    with self.serial_lock:
+                        self.set_motor1_pwm(0)
+                except Exception as e:
+                    self.get_logger().error(f"Error in watchdog stopping motor 1: {e}")
             
-            # Use the same lock as in set_motor2_pwm
-            with self.serial_lock:
-                self.set_motor2_pwm(0)
+            # Check motor 2
+            time_diff_m2 = (now - self.motor2_last_cmd_time).nanoseconds / 1e9
+            if time_diff_m2 > self.motor_timeout:
+                # No recent command, stop motor 2
+                if self.debug_level >= 1:
+                    self.get_logger().debug(f"Motor 2 watchdog timeout after {time_diff_m2:.2f}s, stopping")
+                
+                # Use the same lock as in set_motor2_pwm
+                try:
+                    with self.serial_lock:
+                        self.set_motor2_pwm(0)
+                except Exception as e:
+                    self.get_logger().error(f"Error in watchdog stopping motor 2: {e}")
+        except Exception as e:
+            self.get_logger().error(f"Error in watchdog callback: {e}")
+            # Don't stop motors or mark connection as broken here to avoid cascading failures
 
     def stop_all_motors(self):
         """Stop all motors on the controller"""
@@ -461,28 +525,60 @@ class SingleRoboclawControllerNode(Node):
             self.get_logger().info("Attempting to reconnect to Roboclaw...")
             
             # Use serial_lock to ensure thread safety during reconnection
-            with self.serial_lock:
-                success = self.init_roboclaw_controller()
-            
-            if success:
-                self.get_logger().info("Reconnected to Roboclaw successfully")
-                # consecutive_errors is reset in init_roboclaw_controller
-            else:
+            try:
+                with self.serial_lock:
+                    success = self.init_roboclaw_controller()
+                
+                if success:
+                    self.get_logger().info("Reconnected to Roboclaw successfully")
+                    # consecutive_errors is reset in init_roboclaw_controller
+                else:
+                    self.consecutive_errors += 1
+                    self.get_logger().warn(f"Reconnect attempt failed, error count: {self.consecutive_errors}")
+                    
+                    # If too many consecutive errors, back off exponentially
+                    if self.consecutive_errors >= self.max_consecutive_errors:
+                        backoff_time = min(30, 2 ** (self.consecutive_errors - self.max_consecutive_errors))  # Max 30 seconds
+                        self.get_logger().warn(f"Too many consecutive errors, backing off for {backoff_time} seconds")
+                        time.sleep(backoff_time)
+                    
+                    # Reschedule reconnection
+                    self.schedule_reconnect()
+            except Exception as e:
+                self.get_logger().error(f"Error during reconnection attempt: {e}")
                 self.consecutive_errors += 1
-                self.get_logger().warn(f"Reconnect attempt failed, error count: {self.consecutive_errors}")
-                
-                # If too many consecutive errors, back off exponentially
-                if self.consecutive_errors >= self.max_consecutive_errors:
-                    backoff_time = min(30, 2 ** self.consecutive_errors)  # Max 30 seconds
-                    self.get_logger().warn(f"Too many consecutive errors, backing off for {backoff_time} seconds")
-                    time.sleep(backoff_time)
-                
-                # Reschedule reconnection
-                self.schedule_reconnect()
+                self.schedule_reconnect()  # Try again later
         
         # Schedule the reconnection attempt
         self.reconnect_timer = threading.Timer(self.reconnect_interval, reconnect_callback)
         self.reconnect_timer.start()
+        
+    def decode_roboclaw_error(self, error_code):
+        """Decode RoboClaw error code into a human-readable message"""
+        error_descriptions = {
+            0x0000: "Normal",
+            0x0001: "M1 overcurrent warning",
+            0x0002: "M2 overcurrent warning",
+            0x0004: "Emergency stop",
+            0x0008: "Temperature error",
+            0x0010: "Temperature warning",
+            0x0020: "Main voltage high warning",
+            0x0040: "Main voltage low warning",
+            0x0080: "Logic voltage high warning",
+            0x0100: "Logic voltage low warning",
+            0x0200: "M1 driver fault",
+            0x0400: "M2 driver fault",
+            0x0800: "Main voltage high fault",
+            0x1000: "Main voltage low fault",
+            0x2000: "Temperature fault",
+            0x4000: "M1 overcurrent fault",
+            0x8000: "M2 overcurrent fault"
+        }
+        
+        if error_code in error_descriptions:
+            return error_descriptions[error_code]
+        else:
+            return f"Unknown error code: {error_code:#x}"
 
     def shutdown(self):
         """Clean shutdown of the node"""

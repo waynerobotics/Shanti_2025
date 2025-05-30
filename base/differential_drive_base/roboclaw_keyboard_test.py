@@ -37,7 +37,7 @@ except ImportError as e:
         sys.exit(1)
 
 # Configuration (edit these values as needed)
-DEFAULT_PORT = '/dev/ttyACM0'  # Default serial port
+DEFAULT_PORT = '/dev/ttyACM2'  # Default serial port
 DEFAULT_BAUDRATE = 38400       # Default baud rate
 DEFAULT_ADDRESS = 0x80         # Default controller address
 SPEED_INCREMENT = 2000         # Speed increment per key press

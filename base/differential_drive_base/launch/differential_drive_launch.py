@@ -55,7 +55,7 @@ def generate_launch_description():
     
     control_rate_arg = DeclareLaunchArgument(
         'control_rate',
-        default_value='0.2',
+        default_value='1.',
         description='Control rate in seconds (5Hz = 0.2s)'
     )
     
@@ -89,7 +89,7 @@ def generate_launch_description():
             'address': LaunchConfiguration('right_address'),
             'debug_level': LaunchConfiguration('debug_level'),
             'pwm_topic_prefix': 'right_motor_controller',
-            'motor1_invert': False,
+            'motor1_invert': True,
             'motor2_invert': True,
             'control_rate': LaunchConfiguration('control_rate'),
             'heartbeat_interval': LaunchConfiguration('control_rate')
