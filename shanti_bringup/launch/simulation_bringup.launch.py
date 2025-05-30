@@ -39,7 +39,7 @@ def generate_launch_description():
     print(gzserver_launch_path)
    # Find the world file
     #worldfile = f'{home_dir}ros2_ws/src/Shanti_2025/simulation/worlds/map1.world'
-    worldfile = f'{home_dir}ros2_ws/src/Shanti_2025/simulation/worlds/competition.world'
+    worldfile = f'{home_dir}ros2_ws/src/Shanti_2025/simulation/worlds/competition_oakland.world'
     print (worldfile)
     print ('****************************')
     gzclient_launch = IncludeLaunchDescription(
