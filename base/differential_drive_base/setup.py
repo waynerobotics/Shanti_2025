@@ -28,6 +28,8 @@ setup(
             'encoder_odom = differential_drive_base.odometry_publisher:main',
             'roboclaw_controller = differential_drive_base.roboclaw_controller:main',
             'roboclaw_pwm_controller = differential_drive_base.roboclaw_pwm_controller:main',
+            'single_roboclaw_controller = differential_drive_base.single_roboclaw_controller:main',
+            'differential_drive_controller = differential_drive_base.differential_drive_controller:main',
         ],
     },
     py_modules=['differential_drive_base.roboclaw_3'],  # Explicitly include the roboclaw_3 module

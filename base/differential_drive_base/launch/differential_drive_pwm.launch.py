@@ -8,8 +8,8 @@ import os
 
 def generate_launch_description():
     # Declare launch parameters with defaults
-    left_roboclaw_port = LaunchConfiguration('left_roboclaw_port', default='/dev/ttyACM2')
-    right_roboclaw_port = LaunchConfiguration('right_roboclaw_port', default='/dev/ttyACM3')
+    left_roboclaw_port = LaunchConfiguration('left_roboclaw_port', default='/dev/ttyACM0')
+    right_roboclaw_port = LaunchConfiguration('right_roboclaw_port', default='/dev/ttyACM2')
     baud_rate = LaunchConfiguration('baud_rate', default='38400')
     left_address = LaunchConfiguration('left_address', default='128')  # 0x80
     right_address = LaunchConfiguration('right_address', default='128')  # 0x80
@@ -33,11 +33,12 @@ def generate_launch_description():
     # Launch Arguments
     launch_args = [
         # Roboclaw communication parameters
+        # CHANGE HERE
         DeclareLaunchArgument('left_roboclaw_port', 
-                              default_value='/dev/ttyACM2',
+                              default_value='/dev/ttyACM0',
                               description='Serial port for the left Roboclaw controller'),
         DeclareLaunchArgument('right_roboclaw_port', 
-                              default_value='/dev/ttyACM3',
+                              default_value='/dev/ttyACM2',
                               description='Serial port for the right Roboclaw controller'),
         DeclareLaunchArgument('baud_rate', 
                               default_value='38400',

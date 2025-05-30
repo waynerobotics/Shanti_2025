@@ -6,7 +6,6 @@ from rclpy.callback_groups import ReentrantCallbackGroup, MutuallyExclusiveCallb
 from geometry_msgs.msg import Twist
 from std_srvs.srv import Empty
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
-import threading
 import math
 import time
 import logging
@@ -31,6 +30,7 @@ class RoboclawPWMControllerNode(Node):
         # Create callback groups for better concurrency
         self.subscription_callback_group = ReentrantCallbackGroup()
         self.service_callback_group = ReentrantCallbackGroup()
+        
         self.timer_callback_group = MutuallyExclusiveCallbackGroup()
         
         # Declare parameters directly instead of through a method
@@ -55,9 +55,6 @@ class RoboclawPWMControllerNode(Node):
         
         # Get parameters from ROS
         self.get_parameters_from_ros()
-        
-        # Create mutex for thread safety
-        self._lock = threading.RLock()
         
         # Initialize controllers
         self.init_roboclaw_controllers()
@@ -311,28 +308,27 @@ class RoboclawPWMControllerNode(Node):
 
     def cmd_vel_callback(self, msg):
         """Callback function for cmd_vel topic subscription"""
-        with self._lock:
-            # Update timestamp for watchdog
-            self.last_cmd_time = self.get_clock().now()
-            
-            # Log the incoming command
-            self.get_logger().debug(f"Received cmd_vel: linear.x={msg.linear.x:.2f}, angular.z={msg.angular.z:.2f}")
-            
-            # Convert to wheel PWM values
-            left_pwm, right_pwm = self.differential_drive_to_wheel_pwm(
-                msg.linear.x, msg.angular.z)
-            
-            # Apply to motors
-            left_success = self.set_left_motors_pwm(left_pwm)
-            right_success = self.set_right_motors_pwm(right_pwm)
-            
-            if self.debug_level >= 1:
-                self.get_logger().debug(
-                    f"CMD_VEL: linear={msg.linear.x:.2f} m/s, angular={msg.angular.z:.2f} rad/s -> "
-                    f"left_pwm={left_pwm}, right_pwm={right_pwm}")
-            
-            if not (left_success and right_success):
-                self.get_logger().warning("Failed to set some motor PWM values")
+        # Update timestamp for watchdog
+        self.last_cmd_time = self.get_clock().now()
+        
+        # Log the incoming command
+        self.get_logger().debug(f"Received cmd_vel: linear.x={msg.linear.x:.2f}, angular.z={msg.angular.z:.2f}")
+        
+        # Convert to wheel PWM values
+        left_pwm, right_pwm = self.differential_drive_to_wheel_pwm(
+            msg.linear.x, msg.angular.z)
+        
+        # Apply to motors
+        left_success = self.set_left_motors_pwm(left_pwm)
+        right_success = self.set_right_motors_pwm(right_pwm)
+        
+        if self.debug_level >= 1:
+            self.get_logger().debug(
+                f"CMD_VEL: linear={msg.linear.x:.2f} m/s, angular={msg.angular.z:.2f} rad/s -> "
+                f"left_pwm={left_pwm}, right_pwm={right_pwm}")
+        
+        if not (left_success and right_success):
+            self.get_logger().warning("Failed to set some motor PWM values")
 
     def watchdog_callback(self):
         """Watchdog callback to stop motors if no cmd_vel received for a while"""
@@ -396,33 +392,31 @@ class RoboclawPWMControllerNode(Node):
 
     def stop_motors_callback(self, request, response):
         """Service callback to stop all motors"""
-        with self._lock:
-            self.stop_all_motors()
+        self.stop_all_motors()
         return response
 
     def reset_controllers_callback(self, request, response):
         """Service callback to reset Roboclaw controllers"""
-        with self._lock:
+        try:
+            # Stop all motors first
+            self.stop_all_motors()
+            
+            # Explicitly close the ports
             try:
-                # Stop all motors first
-                self.stop_all_motors()
-                
-                # Explicitly close the ports
-                try:
-                    if hasattr(self.left_roboclaw, '_port') and self.left_roboclaw._port.is_open:
-                        self.left_roboclaw._port.close()
-                    if hasattr(self.right_roboclaw, '_port') and self.right_roboclaw._port.is_open:
-                        self.right_roboclaw._port.close()
-                except:
-                    pass
-                
-                # Reopen connections
-                self.init_roboclaw_controllers()
-                
-                self.get_logger().info("Controllers reset successfully")
-            except Exception as e:
-                self.get_logger().error(f"Error resetting controllers: {e}")
-                
+                if hasattr(self.left_roboclaw, '_port') and self.left_roboclaw._port.is_open:
+                    self.left_roboclaw._port.close()
+                if hasattr(self.right_roboclaw, '_port') and self.right_roboclaw._port.is_open:
+                    self.right_roboclaw._port.close()
+            except:
+                pass
+            
+            # Reopen connections
+            self.init_roboclaw_controllers()
+            
+            self.get_logger().info("Controllers reset successfully")
+        except Exception as e:
+            self.get_logger().error(f"Error resetting controllers: {e}")
+            
         return response
 
     def publish_heartbeat(self):

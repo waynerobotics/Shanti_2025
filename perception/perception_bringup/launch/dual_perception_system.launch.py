@@ -15,7 +15,7 @@ def generate_launch_description():
     # Define launch arguments for the first instance
     front_video_source_arg = DeclareLaunchArgument(
         'front_video_source',
-        default_value='0',
+        default_value='2',
         description='Video source for the front camera (device number or file path)'
     )
     
@@ -28,7 +28,7 @@ def generate_launch_description():
     # Define launch arguments for the second instance
     rear_video_source_arg = DeclareLaunchArgument(
         'rear_video_source',
-        default_value='1',
+        default_value='4',
         description='Video source for the rear camera (device number or file path)'
     )
     
