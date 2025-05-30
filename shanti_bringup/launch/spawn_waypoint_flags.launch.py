@@ -40,7 +40,7 @@ def generate_launch_description():
     simulation_pkg = get_package_share_directory('simulation')
     
     # Path to waypoints file
-    waypoints_file = os.path.join(nav_bringup_pkg, 'params', 'gps_waypoints.yaml')
+    waypoints_file = os.path.join(nav_bringup_pkg, 'params', 'gps_waypoints_competition.yaml')
     
     # Load waypoints
     with open(waypoints_file, 'r') as f:
