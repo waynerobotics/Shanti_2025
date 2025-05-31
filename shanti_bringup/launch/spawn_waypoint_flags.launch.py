@@ -41,6 +41,7 @@ def generate_launch_description():
     
     # Path to waypoints file
     waypoints_file = os.path.join(nav_bringup_pkg, 'params', 'gps_waypoints_competition.yaml')
+    print (waypoints_file)
     
     # Load waypoints
     with open(waypoints_file, 'r') as f:
