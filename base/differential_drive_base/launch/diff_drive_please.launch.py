@@ -24,6 +24,18 @@ def generate_launch_description():
         description='Joystick device'
     )
     
+    left_roboclaw_port_arg = DeclareLaunchArgument(
+        'left_roboclaw_port',
+        default_value='/dev/ttyACM0',
+        description='Port for the left RoboClaw controller'
+    )
+
+    right_roboclaw_port_arg = DeclareLaunchArgument(
+        'right_roboclaw_port',
+        default_value='/dev/ttyACM1',
+        description='Port for the right RoboClaw controller'
+    )
+
     # Paths
     pkg_share = FindPackageShare('differential_drive_base')
     diff_drive_launch_file = PathJoinSubstitution([pkg_share, 'launch', 'differential_drive_launch.py'])
@@ -32,9 +44,10 @@ def generate_launch_description():
     diff_drive_please = Node(
         package='differential_drive_base',
         executable='diff_drive_please',
-        name='diff_drive_please_node',
+        name='diff_drive_please_node_left',
         output='screen',
         parameters=[{
+            'port': LaunchConfiguration('left_roboclaw_port'),
             'wheel_base': 0.5,  # Example value, adjust as needed
             'wheel_radius': 0.1,  # Example value, adjust as needed
             'max_speed': 1.0,  # Example value, adjust as needed
@@ -46,7 +59,26 @@ def generate_launch_description():
             'debug_level': 1,
         }],
     )
-    
+
+
+    diff_drive_please = Node(
+        package='differential_drive_base',
+        executable='diff_drive_please',
+        name='diff_drive_please_node_right',
+        output='screen',
+        parameters=[{
+            'port': LaunchConfiguration('right_roboclaw_port'),
+            'wheel_radius': 0.1,  # Example value, adjust as needed
+            'max_speed': 1.0,  # Example value, adjust as needed
+            'max_angular_speed': 1.5,  # Example value, adjust as needed
+            'max_pwm': 32767,
+            'min_pwm': 5000,
+            'cmd_timeout': 0.5,
+            'pwm_deadband': 0.05,
+            'debug_level': 1,
+        }],
+    )
+
     # Launch joystick node 
     joy_node = Node(
         package='joy',
@@ -81,7 +113,8 @@ def generate_launch_description():
     return LaunchDescription([
         # Arguments
         joy_dev_arg,
-        
+        left_roboclaw_port_arg,
+        right_roboclaw_port_arg,
         # Launch files
         diff_drive_please,
         
