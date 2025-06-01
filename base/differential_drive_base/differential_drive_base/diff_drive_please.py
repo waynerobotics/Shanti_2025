@@ -3,6 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
+from std_msgs.msg import Int32
 from differential_drive_base.roboclaw_3 import Roboclaw
 import sys
 import time
@@ -43,6 +44,13 @@ class RoboclawMotorController(Node):
         self.invert_left = self.get_parameter('invert_left').value
         self.invert_right = self.get_parameter('invert_right').value
         
+        # Saftey light publisher 
+        self.safety_light_pub = self.create_publisher(
+            Int32,
+            '/safety_light',
+            10)
+       
+        self.publish_safety_light()
         # Connect to RoboClaw
         self.roboclaw = Roboclaw(self.port, self.baudrate)
         success = self.roboclaw.Open()
@@ -70,6 +78,7 @@ class RoboclawMotorController(Node):
             10
         )
         
+ 
         # Create watchdog timer
         self.watchdog_timer = self.create_timer(0.1, self.watchdog_callback)
         
@@ -139,6 +148,9 @@ class RoboclawMotorController(Node):
         
         # Apply motor commands
         self.set_motor_speeds(left_duty, right_duty)
+        # SAFTEY LIGHT : CALL WHERE IT IS RUN THE MOST 
+        self.publish_safety_light()
+        
 
     def watchdog_callback(self):
         """Stop motors if no commands received recently"""
@@ -157,6 +169,11 @@ class RoboclawMotorController(Node):
             self.roboclaw._port.close()
         except:
             pass
+    
+    def publish_safety_light(self):
+        msg = Int32()
+        msg.data = 2
+        self.safety_light_pub.publish(msg)
 
 def main(args=None):
     rclpy.init(args=args)
