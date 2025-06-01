@@ -1,5 +1,5 @@
 // Arduino program to control a safety light using relay
-// Compatible with aisha.py ROS2 node
+// Compatible with safety_light.py ROS2 node
 // Date: May 27, 2025
 
 const int RELAY_ONE = 4;     // Pin connected to relay
@@ -60,10 +60,10 @@ void loop() {
   
   // Handle the different light modes
   switch (blinkRate) {
-    case 0:  // OFF
-      digitalWrite(RELAY_ONE, LOW);
-      digitalWrite(ONBOARD_LED, LOW);
-      break;
+    //case 0:  // OFF
+      //digitalWrite(RELAY_ONE, LOW);
+      //digitalWrite(ONBOARD_LED, LOW);
+      //break;
       
     case 1:  // ON solid
       digitalWrite(RELAY_ONE, HIGH);
