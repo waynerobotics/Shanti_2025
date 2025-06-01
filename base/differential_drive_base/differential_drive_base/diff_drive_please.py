@@ -8,7 +8,7 @@ import sys
 import time
 
 # Configuration parameters
-DEFAULT_PORT = '/dev/ttyACM0'
+DEFAULT_PORT = '/dev/ttyACM1'
 DEFAULT_BAUDRATE = 38400
 DEFAULT_ADDRESS = 0x80
 MAX_SPEED = 32767

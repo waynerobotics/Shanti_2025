@@ -33,6 +33,7 @@ setup(
             'single_roboclaw_controller = differential_drive_base.single_roboclaw_controller:main',
             'differential_drive_controller = differential_drive_base.differential_drive_controller:main',
             'diff_drive_please=differential_drive_base.diff_drive_please:main',
+            'closed_loop_controller=differential_drive_base.closed_loop_controller:main',
         ],
     },
     py_modules=['differential_drive_base.roboclaw_3'],  # Explicitly include the roboclaw_3 module
