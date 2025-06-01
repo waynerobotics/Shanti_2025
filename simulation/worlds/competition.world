@@ -25,7 +25,7 @@
     <include>
       <uri>model://igvc_track</uri>
       <name>IGVC Track</name>
-      <pose>30 30 0 0 0 1.57</pose>
+      <pose>0 -16 0 0 0 0</pose>
     </include>
 
     <!-- Ramp -->

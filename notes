@@ -1,0 +1,9 @@
+  
+    # Path to waypoints file
+   # waypoints_file = os.path.join(nav_bringup_pkg, 'params', 'gps_waypoints.yaml')
+    waypoints_file = os.path.join(nav_bringup_pkg, 'params', 'gps_waypoints_competition.yaml')
+    
+    # Load waypoints
+    with open(waypoints_file, 'r') as f:
+        waypoints_data = yaml.safe_load(f)
+    
