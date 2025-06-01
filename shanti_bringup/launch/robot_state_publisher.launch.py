@@ -16,12 +16,11 @@ from launch.actions import (
     LogInfo,
     TimerAction
 )
-
-import launch_ros
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, Command, PathJoinSubstitution
 from launch.conditions import IfCondition
 from launch_ros.actions import Node
+import launch_ros.actions
 from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
@@ -235,27 +234,6 @@ def generate_launch_description():
     return launch.LaunchDescription([
         # Launch arguments
         use_sim_time_arg,
-        robot_description_arg,
-        enable_perception_arg,
-        enable_rviz_arg,
-        enable_teleop_arg,
-        
-        # Core systems with sequential launch using timers
-        log_base_start,
+        robot_description_arg,  # Include the robot_description_file argument
         robot_state_publisher_node,
-        base_launch,
-        
-        # Delayed perception and localization systems
-        perception_delayed_action,
-        localization_delayed_action,
-        
-        # More delayed navigation system
-        navigation_delayed_action,
-        
-        # Optional visualization and teleop
-        rviz_node,
-        ros_websocket,
-        ros_api,
-        joy_node,
-        teleop_node
     ])

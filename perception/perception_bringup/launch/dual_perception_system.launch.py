@@ -15,26 +15,26 @@ def generate_launch_description():
     # Define launch arguments for the first instance
     front_video_source_arg = DeclareLaunchArgument(
         'front_video_source',
-        default_value='0',
+        default_value='2',
         description='Video source for the front camera (device number or file path)'
     )
     
     front_lidar_port_arg = DeclareLaunchArgument(
         'front_lidar_port',
-        default_value='/dev/ttyUSB0',
+        default_value='/dev/ttyUSB1',
         description='Serial port for the front Unitree LiDAR'
     )
 
     # Define launch arguments for the second instance
     rear_video_source_arg = DeclareLaunchArgument(
         'rear_video_source',
-        default_value='1',
+        default_value='4',
         description='Video source for the rear camera (device number or file path)'
     )
     
     rear_lidar_port_arg = DeclareLaunchArgument(
         'rear_lidar_port',
-        default_value='/dev/ttyUSB1',
+        default_value='/dev/ttyUSB0',
         description='Serial port for the rear Unitree LiDAR'
     )
     
@@ -51,7 +51,7 @@ def generate_launch_description():
             launch_arguments={
                 'video_source': LaunchConfiguration('front_video_source'),
                 'lidar_port': LaunchConfiguration('front_lidar_port'),
-                'cloud_frame': 'front_unilidar_lidar',
+                'cloud_frame': 'lidar_front_left_link',
                 'imu_frame': 'front_unilidar_imu'
             }.items()
         )
@@ -70,7 +70,7 @@ def generate_launch_description():
             launch_arguments={
                 'video_source': LaunchConfiguration('rear_video_source'),
                 'lidar_port': LaunchConfiguration('rear_lidar_port'),
-                'cloud_frame': 'rear_unilidar_lidar',
+                'cloud_frame': 'lidar_back_right_link',
                 'imu_frame': 'rear_unilidar_imu'
             }.items()
         )

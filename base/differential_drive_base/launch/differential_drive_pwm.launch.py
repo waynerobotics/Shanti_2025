@@ -8,8 +8,8 @@ import os
 
 def generate_launch_description():
     # Declare launch parameters with defaults
-    left_roboclaw_port = LaunchConfiguration('left_roboclaw_port', default='/dev/ttyACM0')
-    right_roboclaw_port = LaunchConfiguration('right_roboclaw_port', default='/dev/ttyACM1')
+    left_roboclaw_port = LaunchConfiguration('left_roboclaw_port', default='/dev/ttyACM2')
+    right_roboclaw_port = LaunchConfiguration('right_roboclaw_port', default='/dev/ttyACM3')
     baud_rate = LaunchConfiguration('baud_rate', default='38400')
     left_address = LaunchConfiguration('left_address', default='128')  # 0x80
     right_address = LaunchConfiguration('right_address', default='128')  # 0x80
@@ -26,6 +26,9 @@ def generate_launch_description():
     encoder_serial_port = LaunchConfiguration('encoder_serial_port', default='/dev/ttyACM2')
     encoder_baud_rate = LaunchConfiguration('encoder_baud_rate', default='115200')
     encoder_resolution = LaunchConfiguration('encoder_resolution', default='4096')
+
+  
+
     
     # Launch Arguments
     launch_args = [
@@ -84,6 +87,8 @@ def generate_launch_description():
         DeclareLaunchArgument('encoder_resolution', 
                               default_value='4096',
                               description='Encoder counts per revolution'),
+                
+        
     ]
     
     # Define node actions
@@ -125,12 +130,40 @@ def generate_launch_description():
             'debug_level': debug_level,
         }],
     )
+
+    # Launch joystick node 
+    joy_node = Node(
+        package='joy',
+        executable='joy_node',
+        name='joy_node',
+        output='screen',
+        
+    )
+
+    # Launch joystick axis to twist message conversion 
+    joy2twist_node = Node(
+        package='joystick2base',
+        executable='joy2twist',
+            
+        # Remap to Gazebo diff drive topic
+        remappings=[
+            ('/turtle1/cmd_vel', '/cmd_vel')
+        ],
+        parameters=[{
+            'linear_axis': 1, 
+            'angular_axis': 3, # 0 for yoke, 3 for joystick
+        }],
+        
+    )
+    
     
     # Return the LaunchDescription object with all entities to launch
     return LaunchDescription(
         launch_args + 
         [
             roboclaw_pwm_controller_node,
-#            encoder_odometry_node,
+            #encoder_odometry_node,
+            joy_node,
+            joy2twist_node
         ]
     )

@@ -37,7 +37,7 @@ def generate_launch_description():
         description='Frame ID for the IMU'
     )
     
-    # Unitree LiDAR node
+    # Unitree LiDAR 
     unitree_lidar_node = Node(
         package='unitree_lidar_ros2',
         executable='unitree_lidar_ros2_node',
@@ -77,9 +77,9 @@ def generate_launch_description():
         parameters=[
             {
                 'transformation_matrix': [
-                    1.0, 0.0, 0.0, 0.0,
-                    0.0, 1.0, 0.0, 0.0,
-                    0.0, 0.0, 1.0, 0.0,
+                    0.0, -1, 0.0, -0.058,
+                    -1, 1.0, 0.0, 0.0,
+                    0.0, 0.0, -1.0, 0.09,
                     0.0, 0.0, 0.0, 1.0
                 ],
                 'pointcloud_topic': 'unilidar/cloud',

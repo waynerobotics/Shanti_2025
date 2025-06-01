@@ -1,0 +1,90 @@
+// Arduino program to control a safety light using relay
+// Compatible with aisha.py ROS2 node
+// Date: May 27, 2025
+
+const int RELAY_ONE = 4;     // Pin connected to relay
+const int RELAY_TWO = 7;     // Pin connected to relay
+const int RELAY_THREE = 8;     // Pin connected to relay
+const int RELAY_FOUR = 12;     // Pin connected to relay
+
+const int ONBOARD_LED = 13;  // Onboard LED for status
+
+// Variables for blink patterns
+int blinkRate = 0;           // 0=off, 1=solid, 2=blinking
+unsigned long previousMillis = 0;
+const long blinkInterval = 500;  // Blink interval in milliseconds
+int ledState = LOW;
+
+void setup() {
+  // Initialize serial communication
+  Serial.begin(9600);
+  
+  // Initialize digital pins
+  pinMode(RELAY_ONE, OUTPUT);
+  pinMode(ONBOARD_LED, OUTPUT);
+  
+  // Set initial state - both LEDs off
+  digitalWrite(RELAY_ONE, LOW);
+  digitalWrite(ONBOARD_LED, LOW);
+  digitalWrite(RELAY_TWO, HIGH);
+  
+  // Send status message
+  Serial.println("Arduino safety light initialized");
+}
+
+void loop() {
+  // Check for incoming serial data
+  if (Serial.available() > 0) {
+    // Read the incoming byte
+    char receivedChar = Serial.read();
+    
+    // Process the command
+    if (receivedChar == '0') {
+      blinkRate = 0;  // Turn off
+      Serial.println("Light OFF");
+    } 
+    else if (receivedChar == '1') {
+      blinkRate = 1;  // Solid on
+      Serial.println("Light ON");
+    } 
+    else if (receivedChar == '2') {
+      blinkRate = 2;  // Blinking
+      Serial.println("Light BLINKING");
+    }
+    
+    // Consume any additional characters (like newlines)
+    while (Serial.available() > 0) {
+      Serial.read();
+    }
+  }
+  
+  // Handle the different light modes
+  switch (blinkRate) {
+    case 0:  // OFF
+      digitalWrite(RELAY_ONE, LOW);
+      digitalWrite(ONBOARD_LED, LOW);
+      break;
+      
+    case 1:  // ON solid
+      digitalWrite(RELAY_ONE, HIGH);
+      digitalWrite(ONBOARD_LED, HIGH);
+      break;
+      
+    case 2:  // BLINKING
+      // Get the current time
+      unsigned long currentMillis = millis();
+      
+      // Check if it's time to blink
+      if (currentMillis - previousMillis >= blinkInterval) {
+        previousMillis = currentMillis;
+        
+        // Toggle LED state
+        ledState = (ledState == LOW) ? HIGH : LOW;
+        
+        // Update both LEDs
+        digitalWrite(RELAY_ONE, ledState);
+        digitalWrite(ONBOARD_LED, ledState);
+      }
+      break;
+  }
+}
