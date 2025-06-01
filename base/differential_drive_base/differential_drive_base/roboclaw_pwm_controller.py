@@ -56,8 +56,6 @@ class RoboclawPWMControllerNode(Node):
         # Get parameters from ROS
         self.get_parameters_from_ros()
         
-<<<<<<< HEAD
-=======
         # Create mutex for thread safety
         self._lock = threading.RLock()
         
@@ -65,7 +63,6 @@ class RoboclawPWMControllerNode(Node):
         self._left_serial_lock = threading.RLock()
         self._right_serial_lock = threading.RLock()
         
->>>>>>> aca1d884ea12fbecacd8fddf6c003e91239a4fbf
         # Initialize controllers
         self.init_roboclaw_controllers()
         
@@ -443,22 +440,6 @@ class RoboclawPWMControllerNode(Node):
             
             # Explicitly close the ports
             try:
-<<<<<<< HEAD
-                if hasattr(self.left_roboclaw, '_port') and self.left_roboclaw._port.is_open:
-                    self.left_roboclaw._port.close()
-                if hasattr(self.right_roboclaw, '_port') and self.right_roboclaw._port.is_open:
-                    self.right_roboclaw._port.close()
-            except:
-                pass
-            
-            # Reopen connections
-            self.init_roboclaw_controllers()
-            
-            self.get_logger().info("Controllers reset successfully")
-        except Exception as e:
-            self.get_logger().error(f"Error resetting controllers: {e}")
-            
-=======
                 # Stop all motors first
                 self.stop_all_motors()
                 
@@ -481,7 +462,6 @@ class RoboclawPWMControllerNode(Node):
             except Exception as e:
                 self.get_logger().error(f"Error resetting controllers: {e}")
                 
->>>>>>> aca1d884ea12fbecacd8fddf6c003e91239a4fbf
         return response
 
     def publish_heartbeat(self):
