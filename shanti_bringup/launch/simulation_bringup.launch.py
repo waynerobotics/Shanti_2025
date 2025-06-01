@@ -39,7 +39,7 @@ def generate_launch_description():
     print(gzserver_launch_path)
    # Find the world file
     #worldfile = f'{home_dir}ros2_ws/src/Shanti_2025/simulation/worlds/map1.world'
-    worldfile = f'{home_dir}ros2_ws/src/Shanti_2025/simulation/worlds/competition.world'
+    worldfile = f'{home_dir}ros2_ws/src/Shanti_2025/simulation/worlds/competition_oakland_refined.world'
     print (worldfile)
     print ('****************************')
     gzclient_launch = IncludeLaunchDescription(
@@ -88,7 +88,7 @@ def generate_launch_description():
         arguments=[
             '-entity', 'shanti',
             '-topic', 'robot_description',
-            '-x', '13', '-y', '35', '-z', '1',  # orig..x,y = 0.  Position (x, y, z)... oakland: '-x', '-20.26', '-y', '24.8', '-z', '3',
+            '-x', '-31.0', '-y', '23.0', '-z', '1.0'#'-x', '13', '-y', '35', '-z', '1',  # orig..x,y = 0.  Position (x, y, z)... oakland: '-x', '-20.26', '-y', '24.8', '-z', '3',
             '-R', '0.0', '-P', '0.0', '-Y', '1.58093'   # Orientation (roll, pitch, yaw 1.58093)  in radians
         ],
         output='screen'

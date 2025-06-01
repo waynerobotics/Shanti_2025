@@ -6,7 +6,6 @@ from rclpy.callback_groups import ReentrantCallbackGroup, MutuallyExclusiveCallb
 from geometry_msgs.msg import Twist
 from std_srvs.srv import Empty
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
-import threading
 import math
 import time
 import logging
@@ -31,6 +30,7 @@ class RoboclawPWMControllerNode(Node):
         # Create callback groups for better concurrency
         self.subscription_callback_group = ReentrantCallbackGroup()
         self.service_callback_group = ReentrantCallbackGroup()
+        
         self.timer_callback_group = MutuallyExclusiveCallbackGroup()
         
         # Declare parameters directly instead of through a method
@@ -58,6 +58,10 @@ class RoboclawPWMControllerNode(Node):
         
         # Create mutex for thread safety
         self._lock = threading.RLock()
+        
+        # Create dedicated serial locks for each controller
+        self._left_serial_lock = threading.RLock()
+        self._right_serial_lock = threading.RLock()
         
         # Initialize controllers
         self.init_roboclaw_controllers()
@@ -149,25 +153,34 @@ class RoboclawPWMControllerNode(Node):
             self.get_logger().info(f"Connecting to left Roboclaw on {self.left_roboclaw_port}")
             self.left_roboclaw = Roboclaw(self.left_roboclaw_port, self.baud_rate, 
                                          timeout=self.timeout, retries=self.retries)
-            left_result = self.left_roboclaw.Open()
+            
+            # Use the left serial lock when opening the left controller
+            with self._left_serial_lock:
+                left_result = self.left_roboclaw.Open()
+                
+                # Get firmware version for left controller while we have the lock
+                if left_result:
+                    left_version = self.left_roboclaw.ReadVersion(self.left_address)
+                    if left_version[0]:
+                        self.get_logger().info(f"Left Roboclaw firmware version: {left_version[1]}")
             
             # Initialize right controller with the proper timeout and retries
             self.get_logger().info(f"Connecting to right Roboclaw on {self.right_roboclaw_port}")
             self.right_roboclaw = Roboclaw(self.right_roboclaw_port, self.baud_rate,
                                           timeout=self.timeout, retries=self.retries)
-            right_result = self.right_roboclaw.Open()
+            
+            # Use the right serial lock when opening the right controller
+            with self._right_serial_lock:
+                right_result = self.right_roboclaw.Open()
+                
+                # Get firmware version for right controller while we have the lock
+                if right_result:
+                    right_version = self.right_roboclaw.ReadVersion(self.right_address)
+                    if right_version[0]:
+                        self.get_logger().info(f"Right Roboclaw firmware version: {right_version[1]}")
             
             if left_result and right_result:
                 self.get_logger().info("Successfully connected to both Roboclaw controllers")
-                
-                # Get firmware versions for logging
-                left_version = self.left_roboclaw.ReadVersion(self.left_address)
-                if left_version[0]:
-                    self.get_logger().info(f"Left Roboclaw firmware version: {left_version[1]}")
-                
-                right_version = self.right_roboclaw.ReadVersion(self.right_address)
-                if right_version[0]:
-                    self.get_logger().info(f"Right Roboclaw firmware version: {right_version[1]}")
                 
                 # Initialize motor PWM to zero
                 self.stop_all_motors()
@@ -195,10 +208,9 @@ class RoboclawPWMControllerNode(Node):
         
         # Calculate wheel velocities - THIS IS THE KEY PART FOR TURNING
         wheel_distance = self.wheel_base / 2.0
-        left_wheel_vel = linear_x - (angular_z * wheel_distance) / self.wheel_radius
-        right_wheel_vel = linear_x + (angular_z * wheel_distance) / self.wheel_radius
+        left_wheel_vel = linear_x - (angular_z * wheel_distance)
+        right_wheel_vel = linear_x + (angular_z * wheel_distance)
         
-
         self.get_logger().debug(
             f"Raw wheel velocities: left={left_wheel_vel:.3f}, right={right_wheel_vel:.3f} for "
             f"linear={linear_x:.2f}, angular={angular_z:.2f}"
@@ -215,8 +227,12 @@ class RoboclawPWMControllerNode(Node):
         # Use the maximum of max_speed and max_angular_speed*wheel_base/2 for better scaling
         effective_max = max(self.max_speed, self.max_angular_speed * wheel_distance)
         
-        left_percent = left_wheel_vel / effective_max
-        right_percent = right_wheel_vel / effective_max
+        # Ensure we don't divide by zero
+        if effective_max == 0:
+            effective_max = 0.001
+            
+        left_percent = max(min(left_wheel_vel / effective_max, 1.0), -1.0)  # Clamp between -1.0 and 1.0
+        right_percent = max(min(right_wheel_vel / effective_max, 1.0), -1.0)  # Clamp between -1.0 and 1.0
         
         # Apply deadband - if percentage is less than deadband, set to 0
         if abs(left_percent) < self.pwm_deadband:
@@ -225,21 +241,35 @@ class RoboclawPWMControllerNode(Node):
             right_percent = 0.0
         
         # Calculate PWM values with min_pwm offset for non-zero values
-        # Directly scale to the full Roboclaw duty range (-32767 to 32767)
-        max_duty = 32767
-        min_duty = int(max_duty * (self.min_pwm / self.max_pwm))
+        # The Roboclaw accepts duty cycle values from -32767 to 32767
+        MAX_DUTY = 32767
         
+        # Calculate minimum duty based on min_pwm parameter as a percentage of max_pwm
+        min_duty_percent = self.min_pwm / self.max_pwm
+        MIN_DUTY = int(MAX_DUTY * min_duty_percent)
+        
+        # Initialize PWM values to zero
         left_pwm = 0
-        if left_percent != 0:
-            # Scale between min_duty and max_duty
-            left_pwm_magnitude = min_duty + abs(left_percent) * (max_duty - min_duty)
-            left_pwm = int(math.copysign(left_pwm_magnitude, left_percent))
-            
         right_pwm = 0
+        
+        # Only calculate non-zero PWM if percent is non-zero
+        if left_percent != 0:
+            # Scale between MIN_DUTY and MAX_DUTY
+            if left_percent > 0:
+                left_pwm = MIN_DUTY + int((MAX_DUTY - MIN_DUTY) * left_percent)
+            else:
+                left_pwm = -MIN_DUTY + int((MAX_DUTY - MIN_DUTY) * left_percent)
+            # Ensure we never exceed limits
+            left_pwm = max(min(left_pwm, MAX_DUTY), -MAX_DUTY)
+            
         if right_percent != 0:
-            # Scale between min_duty and max_duty
-            right_pwm_magnitude = min_duty + abs(right_percent) * (max_duty - min_duty)
-            right_pwm = int(math.copysign(right_pwm_magnitude, right_percent))
+            # Scale between MIN_DUTY and MAX_DUTY
+            if right_percent > 0:
+                right_pwm = MIN_DUTY + int((MAX_DUTY - MIN_DUTY) * right_percent)
+            else:
+                right_pwm = -MIN_DUTY + int((MAX_DUTY - MIN_DUTY) * right_percent)
+            # Ensure we never exceed limits
+            right_pwm = max(min(right_pwm, MAX_DUTY), -MAX_DUTY)
         
         # Log the conversion for debugging
         if self.debug_level >= 2:
@@ -255,12 +285,13 @@ class RoboclawPWMControllerNode(Node):
     def set_left_motors_pwm(self, pwm_value):
         """Set PWM for both motors on left side (controlled by left Roboclaw)"""
         try:
-            success = self.send_pwm_with_retry(
-                self.left_roboclaw, 
-                self.left_address,
-                pwm_value,    # M1
-                -pwm_value    # M2 - reversed
-            )
+            with self._left_serial_lock:
+                success = self.send_pwm_with_retry(
+                    self.left_roboclaw, 
+                    self.left_address,
+                    pwm_value,    # M1
+                    -pwm_value    # M2 - reversed
+                )
             
             if success and self.debug_level >= 2:
                 self.get_logger().debug(f"Set left motors PWM to M1:{pwm_value}, M2:{-pwm_value}")
@@ -273,12 +304,13 @@ class RoboclawPWMControllerNode(Node):
     def set_right_motors_pwm(self, pwm_value):
         """Set PWM for both motors on right side (controlled by right Roboclaw)"""
         try:
-            success = self.send_pwm_with_retry(
-                self.right_roboclaw,
-                self.right_address,
-                pwm_value,    # M1
-                -pwm_value    # M2 - reversed
-            )
+            with self._right_serial_lock:
+                success = self.send_pwm_with_retry(
+                    self.right_roboclaw,
+                    self.right_address,
+                    pwm_value,    # M1
+                    -pwm_value    # M2 - reversed
+                )
             
             if success and self.debug_level >= 2:
                 self.get_logger().debug(f"Set right motors PWM to M1:{pwm_value}, M2:{-pwm_value}")
@@ -311,28 +343,27 @@ class RoboclawPWMControllerNode(Node):
 
     def cmd_vel_callback(self, msg):
         """Callback function for cmd_vel topic subscription"""
-        with self._lock:
-            # Update timestamp for watchdog
-            self.last_cmd_time = self.get_clock().now()
-            
-            # Log the incoming command
-            self.get_logger().debug(f"Received cmd_vel: linear.x={msg.linear.x:.2f}, angular.z={msg.angular.z:.2f}")
-            
-            # Convert to wheel PWM values
-            left_pwm, right_pwm = self.differential_drive_to_wheel_pwm(
-                msg.linear.x, msg.angular.z)
-            
-            # Apply to motors
-            left_success = self.set_left_motors_pwm(left_pwm)
-            right_success = self.set_right_motors_pwm(right_pwm)
-            
-            if self.debug_level >= 1:
-                self.get_logger().debug(
-                    f"CMD_VEL: linear={msg.linear.x:.2f} m/s, angular={msg.angular.z:.2f} rad/s -> "
-                    f"left_pwm={left_pwm}, right_pwm={right_pwm}")
-            
-            if not (left_success and right_success):
-                self.get_logger().warning("Failed to set some motor PWM values")
+        # Update timestamp for watchdog
+        self.last_cmd_time = self.get_clock().now()
+        
+        # Log the incoming command
+        self.get_logger().debug(f"Received cmd_vel: linear.x={msg.linear.x:.2f}, angular.z={msg.angular.z:.2f}")
+        
+        # Convert to wheel PWM values
+        left_pwm, right_pwm = self.differential_drive_to_wheel_pwm(
+            msg.linear.x, msg.angular.z)
+        
+        # Apply to motors
+        left_success = self.set_left_motors_pwm(left_pwm)
+        right_success = self.set_right_motors_pwm(right_pwm)
+        
+        if self.debug_level >= 1:
+            self.get_logger().debug(
+                f"CMD_VEL: linear={msg.linear.x:.2f} m/s, angular={msg.angular.z:.2f} rad/s -> "
+                f"left_pwm={left_pwm}, right_pwm={right_pwm}")
+        
+        if not (left_success and right_success):
+            self.get_logger().warning("Failed to set some motor PWM values")
 
     def watchdog_callback(self):
         """Watchdog callback to stop motors if no cmd_vel received for a while"""
@@ -359,12 +390,13 @@ class RoboclawPWMControllerNode(Node):
         
         # Try to stop left motors
         try:
-            left_success = self.send_pwm_with_retry(
-                self.left_roboclaw,
-                self.left_address,
-                0,  # M1
-                0   # M2
-            )
+            with self._left_serial_lock:
+                left_success = self.send_pwm_with_retry(
+                    self.left_roboclaw,
+                    self.left_address,
+                    0,  # M1
+                    0   # M2
+                )
             if not left_success:
                 self.get_logger().error("Failed to stop left motors")
                 success = False
@@ -374,12 +406,13 @@ class RoboclawPWMControllerNode(Node):
             
         # Try to stop right motors
         try:
-            right_success = self.send_pwm_with_retry(
-                self.right_roboclaw,
-                self.right_address,
-                0,  # M1
-                0   # M2
-            )
+            with self._right_serial_lock:
+                right_success = self.send_pwm_with_retry(
+                    self.right_roboclaw,
+                    self.right_address,
+                    0,  # M1
+                    0   # M2
+                )
             if not right_success:
                 self.get_logger().error("Failed to stop right motors")
                 success = False
@@ -396,25 +429,31 @@ class RoboclawPWMControllerNode(Node):
 
     def stop_motors_callback(self, request, response):
         """Service callback to stop all motors"""
-        with self._lock:
-            self.stop_all_motors()
+        self.stop_all_motors()
         return response
 
     def reset_controllers_callback(self, request, response):
         """Service callback to reset Roboclaw controllers"""
-        with self._lock:
+        try:
+            # Stop all motors first
+            self.stop_all_motors()
+            
+            # Explicitly close the ports
             try:
                 # Stop all motors first
                 self.stop_all_motors()
                 
-                # Explicitly close the ports
+                # Explicitly close the ports with proper locks
                 try:
-                    if hasattr(self.left_roboclaw, '_port') and self.left_roboclaw._port.is_open:
-                        self.left_roboclaw._port.close()
-                    if hasattr(self.right_roboclaw, '_port') and self.right_roboclaw._port.is_open:
-                        self.right_roboclaw._port.close()
-                except:
-                    pass
+                    with self._left_serial_lock:
+                        if hasattr(self.left_roboclaw, '_port') and self.left_roboclaw._port.is_open:
+                            self.left_roboclaw._port.close()
+                    
+                    with self._right_serial_lock:
+                        if hasattr(self.right_roboclaw, '_port') and self.right_roboclaw._port.is_open:
+                            self.right_roboclaw._port.close()
+                except Exception as e:
+                    self.get_logger().error(f"Error closing serial ports: {e}")
                 
                 # Reopen connections
                 self.init_roboclaw_controllers()
@@ -422,7 +461,8 @@ class RoboclawPWMControllerNode(Node):
                 self.get_logger().info("Controllers reset successfully")
             except Exception as e:
                 self.get_logger().error(f"Error resetting controllers: {e}")
-                
+        finally:
+            raise RuntimeError("Something went wrong during reset, please check the logs")        
         return response
 
     def publish_heartbeat(self):
@@ -451,14 +491,19 @@ class RoboclawPWMControllerNode(Node):
             # Close existing connections if they exist
             if hasattr(self, 'left_roboclaw'):
                 try:
-                    self.left_roboclaw._port.close()
-                except:
-                    pass
+                    with self._left_serial_lock:
+                        if hasattr(self.left_roboclaw, '_port') and self.left_roboclaw._port.is_open:
+                            self.left_roboclaw._port.close()
+                except Exception as e:
+                    self.get_logger().error(f"Error closing left serial port: {e}")
+            
             if hasattr(self, 'right_roboclaw'):
                 try:
-                    self.right_roboclaw._port.close()
-                except:
-                    pass
+                    with self._right_serial_lock:
+                        if hasattr(self.right_roboclaw, '_port') and self.right_roboclaw._port.is_open:
+                            self.right_roboclaw._port.close()
+                except Exception as e:
+                    self.get_logger().error(f"Error closing right serial port: {e}")
             
             # Wait a moment before reconnecting
             time.sleep(1.0)
