@@ -15,7 +15,7 @@ setup(
         (os.path.join('share', package_name, 'launch'), glob.glob('launch/*.launch.py')),
         (os.path.join('share', package_name, 'config'), glob.glob('config/*.yaml')),
     ],
-    install_requires=['setuptools'],
+    install_requires=['setuptools', 'utm'],
     zip_safe=True,
     maintainer='shanti',
     maintainer_email='blaine.oania@gmail.com',
@@ -27,6 +27,8 @@ setup(
             'utm_map_transform_publisher = localization_bringup.utm_map_transform_publisher:main',
             'custom_lifecycle_manager = localization_bringup.custom_lifecycle_manager:main',
             'odometry_rebroadcaster = localization_bringup.odometry_rebroadcaster:main',
+            'gps_monitor = localization_bringup.gps_monitor:main',
+            'pose_to_gps_converter = localization_bringup.pose_to_gps_converter:main',
         ],
     },
 )

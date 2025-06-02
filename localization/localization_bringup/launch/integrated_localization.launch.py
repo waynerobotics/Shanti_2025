@@ -46,7 +46,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'imu_topic',
-            default_value='/xsens/imu/data',
+            default_value='/imu/data',
             description='Topic for XSens IMU data'
         ),
         DeclareLaunchArgument(
@@ -78,14 +78,15 @@ def generate_launch_description():
     ]
     
     # 1. XSens IMU Driver Node
+    parameters_file_path = Path(get_package_share_directory('xsens_mti_ros2_driver'), 'param', 'xsens_mti_node.yaml')
     xsens_mti_node = Node(
-        package='xsens_mti_ros2_driver',
-        executable='xsens_mti_node',
-        name='xsens_mti_node',
-        output='screen',
-        parameters=[xsens_params_file, {'use_sim_time': use_sim_time}],
-        arguments=['--ros-args', '--log-level', log_level]
-    )
+            package='xsens_mti_ros2_driver',
+            executable='xsens_mti_node',
+            name='xsens_mti_node',
+            output='screen',
+            parameters=[parameters_file_path],
+            arguments=[]
+            )
     
     # 2. NTRIP Client Node for GPS corrections
     ntrip_node = Node(
@@ -97,7 +98,7 @@ def generate_launch_description():
             # NTRIP Server Configuration
             'host': '3.143.243.81',  # Update this with your NTRIP caster
             'port': 2101,
-            'mountpoint': 'WAYNEROBOTICS',
+            'mountpoint': 'fahnerfarms',
             'username': 'roboticsclub-at-wayne-d-edu',
             'password': 'none',
 
@@ -134,7 +135,7 @@ def generate_launch_description():
         parameters=[rl_params_file, {"use_sim_time": use_sim_time}],
         remappings=[
             ("/imu/data", imu_topic),  # Use XSens IMU data
-            ("/gps/fix", "/gps/fix"),
+            ("/gps/fix", "/gnss_pose"),
             ("/odometry/gps", "/odometry/gps"),
             ("/gps/filtered", "/gps/filtered"),
             ('/odometry/filtered', '/odometry/odom'),
@@ -159,69 +160,69 @@ def generate_launch_description():
     )
     
     # 5. Custom Lifecycle Manager
-    custom_lifecycle_manager = Node(
-        package='localization_bringup',
-        executable='custom_lifecycle_manager',
-        name='custom_lifecycle_manager',
-        output='screen',
-        parameters=[{
-            'use_sim_time': use_sim_time,
-            'map_odom_topic': map_odom_topic,
-            'map_frame': map_frame,
-            'utm_frame': utm_frame,
-            'transform_check_period': 1.0,
-            'utm_map_transform_publisher_node': 'utm_map_transform_publisher',
-            'gps_map_transformer_node': 'gps_map_transformer'
-        }]
-    )
+    # custom_lifecycle_manager = Node(
+    #     package='localization_bringup',
+    #     executable='custom_lifecycle_manager',
+    #     name='custom_lifecycle_manager',
+    #     output='screen',
+    #     parameters=[{
+    #         'use_sim_time': use_sim_time,
+    #         'map_odom_topic': map_odom_topic,
+    #         'map_frame': map_frame,
+    #         'utm_frame': utm_frame,
+    #         'transform_check_period': 1.0,
+    #         'utm_map_transform_publisher_node': 'utm_map_transform_publisher',
+    #         'gps_map_transformer_node': 'gps_map_transformer'
+    #     }]
+    # )
     
-    # 6. EKF for Odometry (local frame)
-    ekf_odom = launch_ros.actions.Node(
-        package="robot_localization",
-        executable="ekf_node",
-        name="ekf_filter_node_odom",
-        output="screen",
-        parameters=[rl_params_file, {
-            "use_sim_time": use_sim_time,
-            "imu0": imu_topic  # Update to use XSens IMU
-        }],
-        remappings=[("odometry/filtered", "/odometry/odom")],
-    )
+    # # 6. EKF for Odometry (local frame)
+    # ekf_odom = launch_ros.actions.Node(
+    #     package="robot_localization",
+    #     executable="ekf_node",
+    #     name="ekf_filter_node_odom",
+    #     output="screen",
+    #     parameters=[rl_params_file, {
+    #         "use_sim_time": use_sim_time,
+    #         "imu0": imu_topic  # Update to use XSens IMU
+    #     }],
+    #     remappings=[("odometry/filtered", "/odometry/odom")],
+    # )
     
-    # 7. EKF for Map (global frame)
-    ekf_map = launch_ros.actions.Node(
-        package="robot_localization",
-        executable="ekf_node",
-        name="ekf_filter_node_map",
-        output="screen",
-        parameters=[rl_params_file, {
-            "use_sim_time": use_sim_time,
-            "imu0": imu_topic  # Update to use XSens IMU
-        }],
-        remappings=[("odometry/filtered", "/odometry/map")]
-    )
+    # # 7. EKF for Map (global frame)
+    # ekf_map = launch_ros.actions.Node(
+    #     package="robot_localization",
+    #     executable="ekf_node",
+    #     name="ekf_filter_node_map",
+    #     output="screen",
+    #     parameters=[rl_params_file, {
+    #         "use_sim_time": use_sim_time,
+    #         "imu0": imu_topic  # Update to use XSens IMU
+    #     }],
+    #     remappings=[("odometry/filtered", "/odometry/map")]
+    # )
     
     # 8. Odometry Rebroadcaster
-    odometry_rebroadcaster = launch_ros.actions.Node(
-        package="localization_bringup",
-        executable="odometry_rebroadcaster",
-        name="odometry_rebroadcaster",
-        output="screen",
-        parameters=[rl_params_file, {"use_sim_time": use_sim_time}],
-        remappings=[
-            ("/odometry/gps", "/odometry/gps"),
-            ("/odometry/gps_map", "/odometry/gps_map")
-        ],
-    )
+    # odometry_rebroadcaster = launch_ros.actions.Node(
+    #     package="localization_bringup",
+    #     executable="odometry_rebroadcaster",
+    #     name="odometry_rebroadcaster",
+    #     output="screen",
+    #     parameters=[rl_params_file, {"use_sim_time": use_sim_time}],
+    #     remappings=[
+    #         ("/odometry/gps", "/odometry/gps"),
+    #         ("/odometry/gps_map", "/odometry/gps_map")
+    #     ],
+    # )
     
     # 9. TF for IMU (static transform from base_link to imu_link)
-    imu_tf = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='imu_link_broadcaster',
-        arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'imu_link'],
-        parameters=[{'use_sim_time': use_sim_time}]
-    )
+    # imu_tf = Node(
+    #     package='tf2_ros',
+    #     executable='static_transform_publisher',
+    #     name='imu_link_broadcaster',
+    #     arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'imu_link'],
+    #     parameters=[{'use_sim_time': use_sim_time}]
+    # )
 
     # Assemble launch description
     ld = LaunchDescription()
@@ -237,12 +238,12 @@ def generate_launch_description():
     # Add nodes in order
     ld.add_action(xsens_mti_node)
     ld.add_action(ntrip_node)
-    ld.add_action(imu_tf)
+    # ld.add_action(imu_tf)
     ld.add_action(navsat_transform_node)
     ld.add_action(utm_map_transform_publisher)
-    ld.add_action(custom_lifecycle_manager)
-    ld.add_action(ekf_odom)
-    ld.add_action(ekf_map)
-    ld.add_action(odometry_rebroadcaster)
+    # ld.add_action(custom_lifecycle_manager)
+    # ld.add_action(ekf_odom)
+    # ld.add_action(ekf_map)
+    # ld.add_action(odometry_rebroadcaster)
     
     return ld

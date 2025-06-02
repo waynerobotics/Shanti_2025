@@ -36,6 +36,24 @@ def generate_launch_description():
         default_value='unilidar_imu',
         description='Frame ID for the IMU'
     )
+
+    intensity_min_arg = DeclareLaunchArgument(
+        'intensity_min',
+        default_value='50.0',
+        description='Minimum intensity for filtering the point cloud'
+    )
+
+    intensity_max_arg = DeclareLaunchArgument(
+        'intensity_max',
+        default_value='250.0',
+        description='Maximum intensity for filtering the point cloud'
+    )
+
+    height_arg = DeclareLaunchArgument(
+        'height',
+        default_value='0.5',
+        description='Height for filtering the point cloud (in meters)'
+    )
     
     # Unitree LiDAR 
     unitree_lidar_node = Node(
@@ -91,12 +109,33 @@ def generate_launch_description():
         output='screen',
     )
     
+    # PointCloud Intensity Filter Node
+    pointcloud_intensity_filter_node = Node(
+        package='omnivision',
+        executable='pointcloud_filter',
+        name='pointcloud_filter',
+        parameters=[
+            {
+                'pointcloud_topic': 'unilidar/cloud',
+                'filtered_pointcloud_topic': 'filtered_cloud',
+                'intensity_min': LaunchConfiguration('intensity_min'),
+                'intensity_max': LaunchConfiguration('intensity_max'),
+                'height': LaunchConfiguration('height')
+            }
+        ],
+        output='screen',
+    )
+
     return LaunchDescription([
         video_source_arg,
         lidar_port_arg,
         cloud_frame_arg,
         imu_frame_arg,
+        intensity_min_arg,
+        intensity_max_arg,
+        height_arg,
         unitree_lidar_node,
         vision3d_launch,
         mask_to_pointcloud_node,
+        pointcloud_intensity_filter_node,
     ])

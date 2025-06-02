@@ -41,7 +41,7 @@ def generate_launch_description():
     diff_drive_launch_file = PathJoinSubstitution([pkg_share, 'launch', 'differential_drive_launch.py'])
     
     # Include the differential drive launch file
-    diff_drive_please = Node(
+    diff_drive_please_left = Node(
         package='differential_drive_base',
         executable='diff_drive_please',
         name='diff_drive_please_node_left',
@@ -61,7 +61,7 @@ def generate_launch_description():
     )
 
 
-    diff_drive_please = Node(
+    diff_drive_please_right = Node(
         package='differential_drive_base',
         executable='diff_drive_please',
         name='diff_drive_please_node_right',
@@ -115,9 +115,11 @@ def generate_launch_description():
         joy_dev_arg,
         left_roboclaw_port_arg,
         right_roboclaw_port_arg,
-        # Launch files
-        diff_drive_please,
         
+        # Launch files
+        diff_drive_please_left,
+        diff_drive_please_right,
+
         # Nodes
         joy_node,
         joy2twist_node,

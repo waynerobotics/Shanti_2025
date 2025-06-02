@@ -1,0 +1,70 @@
+ekf_filter_node:
+  ros__parameters:
+    frequency: 30.0
+    two_d_mode: true
+    world_frame: map
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_link
+    publish_tf: true
+    publish_acceleration: true
+    
+    # IMU inputs (angular velocity, orientation)
+    imu0: /imu/data
+    imu0_config: [false, false, false,   # Disable position
+                 true, true, true,       # Use orientation (roll, pitch, yaw)
+                 false, false, false,    # Disable linear velocity 
+                 true, true, true,       # Use angular velocity (roll, pitch, yaw rates)
+                 true, true, false]      # Use only x, y acceleration
+    imu0_differential: false
+    imu0_relative: false
+    imu0_queue_size: 10
+    imu0_remove_gravitational_acceleration: true
+    
+    # GPS odometry from navsat_transform_node
+    odom0: /odometry/gps
+    odom0_config: [true, true, false,    # Use only x, y position
+                  false, false, false,   # Don't use orientation
+                  false, false, false,   # Don't use velocity
+                  false, false, false,   # Don't use acceleration
+                  false, false, false]
+    odom0_differential: false
+    odom0_relative: false
+    odom0_queue_size: 10
+    
+    # Use a slightly larger process noise for GPS position
+    process_noise_covariance: [
+      0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   # X position
+      0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   # Y position
+      0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   # Z position
+      0.0, 0.0, 0.0, 0.03, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  # Roll
+      0.0, 0.0, 0.0, 0.0, 0.03, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  # Pitch
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.03, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  # Yaw
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  # X velocity
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  # Y velocity
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   # Z velocity
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05, 0.0, 0.0, 0.0, 0.0, 0.0,  # Roll rate
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05, 0.0, 0.0, 0.0, 0.0,  # Pitch rate
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05, 0.0, 0.0, 0.0,  # Yaw rate
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0,   # X acceleration
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0,   # Y acceleration
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1    # Z acceleration
+    ]
+
+navsat_transform:
+  ros__parameters:
+    frequency: 30.0
+    delay: 0.0
+    magnetic_declination_radians: 0.0  # Set for your location - check magnetic declination for your area
+    yaw_offset: 0.0                    # Set this if IMU's yaw doesn't align with magnetic north
+    zero_altitude: true                # Set to true for ground vehicles (2D navigation)
+    broadcast_cartesian_transform: true # Enable to broadcast utm->map transform
+    publish_filtered_gps: true
+    use_odometry_yaw: false           # We're not using odometry, so set to false
+    wait_for_datum: false             # Auto-initialize map from first GPS fix
+    transform_timeout: 0.0            # No timeout for transform lookups
+    base_link_frame: base_link
+    world_frame: map                  # The frame in which navigation will occur
+    # Update this with your actual starting location or leave it commented
+    # to use the first GPS fix as the origin
+    # datum: [42.66791, -83.21958, 0.0]  # Latitude, Longitude, Altitude

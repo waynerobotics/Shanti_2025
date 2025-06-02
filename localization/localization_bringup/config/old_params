@@ -13,12 +13,12 @@ ekf_filter_node_odom:
                    true, true, false,  # X, Y linear velocity
                    false, false, true]  # Yaw angular velocity
 
-    # IMU (angular velocity, orientation)
-    imu0: /xsens/imu/data
+    # # IMU (angular velocity only)
+    imu0: /demo/imu
     imu0_config: [false, false, false,  # Disable linear acceleration
-                 false, false, true,    # Enable yaw orientation
+                 false, false, true,  # Disable orientation
                  false, false, false,
-                 false, false, true]    # Fuse angular velocity (yaw rate)
+                 false, false, true]     # Fuse angular velocity (roll, pitch, yaw rates)
 
     # Simplified process noise covariance (diagonal values only)
     process_noise_covariance: [
@@ -47,19 +47,18 @@ ekf_filter_node_map:
     base_link_frame: base_link
     publish_tf: true
 
-    # GPS data transformed to map frame
     odom0: /odometry/gps_map  # GPS data transformed into world (map) frame
     odom0_config: [true, true, false,  # Fuse X, Y position
-                   false, false, false,  # Don't fuse orientation (handled by IMU)
-                   false, false, false,  # Don't fuse velocity
+                   false, false, false,  # Don't fuse orientation (handled by odom)
+                   false, false, false,  # Fuse X, Y velocity (if GPS provides it)
                    false, false, false]
-    odom0_pose_rejection_threshold: 5.0  # Meters - increased for GPS noise
+    odom0_pose_rejection_threshold: 3.0  # Meters
     odom0_twist_rejection_threshold: 1.0  # m/s 
 
-    # IMU data (orientation only for global frame)
-    imu0: /xsens/imu/data
+    # IMU (angular velocity only)
+    imu0: /demo/imu
     imu0_config: [false, false, false,
-                  false, false, true,  # Use yaw from IMU
+                  false, false, true,
                   false, false, false,
                   false, false, false,
                   false, false, false]
@@ -85,17 +84,16 @@ ekf_filter_node_map:
 
 navsat_transform:
   ros__parameters:
-    frequency: 30.0
+    frequency: 51.0
     delay: 0.0
-    magnetic_declination_radians: 0.0  # Set for your location - you'll need to look up the value for your area
-    yaw_offset: 1.58093             # Adjust if IMU/GPS axes are misaligned
-    zero_altitude: true             # Assume 2D navigation
+    magnetic_declination_radians: 0.0  # Set for your location (e.g., 0.2 for Zurich)
+    yaw_offset: 1.58093                    # Adjust if IMU/GPS axes are misaligned
+    zero_altitude: false                 # Assume 2D navigation
     broadcast_cartesian_transform: false
     publish_filtered_gps: true
-    use_odometry_yaw: false         # Use the IMU for yaw instead of odometry
-    wait_for_datum: false           # Auto-initialize map from first GPS fix
+    use_odometry_yaw: true              # Critical for orientation
+    wait_for_datum: false               # Auto-initialize map from first GPS fix
     base_link_frame: base_link
-    odom_frame: odom                # Must match ekf_filter_node_odom
+    odom_frame: odom                    # Must match ekf_filter_node_odom
     world_frame: map
-    # Update this with your actual starting location
-    datum: [42.66791, -83.21958, 0.0]  # Default example - change to your starting coordinates
+    datum: [42.66791, -83.21958, 0.0]  # Example (replace with your GPS origin)
