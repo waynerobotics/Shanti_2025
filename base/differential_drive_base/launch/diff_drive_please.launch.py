@@ -26,13 +26,13 @@ def generate_launch_description():
     
     left_roboclaw_port_arg = DeclareLaunchArgument(
         'left_roboclaw_port',
-        default_value='/dev/ttyACM0',
+        default_value='/dev/ttyACM1',
         description='Port for the left RoboClaw controller'
     )
 
     right_roboclaw_port_arg = DeclareLaunchArgument(
         'right_roboclaw_port',
-        default_value='/dev/ttyACM1',
+        default_value='/dev/ttyACM0',
         description='Port for the right RoboClaw controller'
     )
 

@@ -28,13 +28,13 @@ def generate_launch_description():
 
     front_intensity_min_arg = DeclareLaunchArgument(
         'front_intensity_min',
-        default_value='90.0',
+        default_value='160.0',
         description='Minimum intensity for filtering the point cloud of front lidar'
     )
 
     front_intensity_max_arg = DeclareLaunchArgument(
         'front_intensity_max',
-        default_value='131.0',
+        default_value='191.0',
         description='Maximum intensity for filtering the point cloud of front lidar'
     )
 
@@ -65,7 +65,7 @@ def generate_launch_description():
 
     rear_intensity_max_arg = DeclareLaunchArgument(
         'rear_intensity_max',
-        default_value='140.0',
+        default_value='180.0',
         description='Maximum intensity for filtering the point cloud of rear lidar'
     )
 
