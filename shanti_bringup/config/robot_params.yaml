@@ -4,11 +4,11 @@
 # - Perception (front and rear camera/lidar)
 # - Localization (GPS, IMU, odometry fusion)
 
-/**:
-  ros__parameters:
-    # General parameters
-    use_sim_time: false
-    debug_level: 1
+
+ros__parameters:
+  # General parameters
+  use_sim_time: false
+  debug_level: 1
 
 # Base System Parameters
 roboclaw_controller_node:

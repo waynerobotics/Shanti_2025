@@ -1,5 +1,6 @@
 import launch
 from launch.actions import IncludeLaunchDescription
+from launch.actions import TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration
 from ament_index_python.packages import get_package_share_directory
@@ -27,33 +28,45 @@ def generate_launch_description():
 
     # get the urdf model file
     pkg_share = launch_ros.substitutions.FindPackageShare(package='shanti_base').find('shanti_base')
-    default_model_path = os.path.join(pkg_share, 'description/shanti_6w_lidar_description.urdf')
+    default_model_path = os.path.join(pkg_share, 'description/shanti_6w_ign.urdf')
     default_rviz_config_path = os.path.join(pkg_share, 'rviz/rviz.rviz')
     print (default_model_path)
     # Find Gazebo files
-    gazebo_share = f'/opt/ros/{ros_distro}/share/gazebo_ros'
-    print (gazebo_share)
-    gzclient_launch_path = os.path.join(gazebo_share, 'launch/gzclient.launch.py')
-    gzserver_launch_path = os.path.join(gazebo_share, 'launch/gzserver.launch.py')
-    print(gzclient_launch_path)
-    print(gzserver_launch_path)
+    
+    # gazebo_share = f'/opt/ros/{ros_distro}/share/gazebo_ros'
+    # print (gazebo_share)
+    # gzclient_launch_path = os.path.join(gazebo_share, 'launch/gzclient.launch.py')
+    # gzserver_launch_path = os.path.join(gazebo_share, 'launch/gzserver.launch.py')
+    
+    # print(gzclient_launch_path)
+    # print(gzserver_launch_path)
+    
    # Find the world file
     #worldfile = f'{home_dir}ros2_ws/src/Shanti_2025/simulation/worlds/map1.world'
-    worldfile = f'{home_dir}ros2_ws/src/Shanti_2025/simulation/worlds/competition_oakland_refined.world'
+    
+    worldfile = f'{home_dir}/ros2_ws/src/Shanti_2025/simulation/worlds/empty.world'
     print (worldfile)
     print ('****************************')
-    gzclient_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(gzclient_launch_path)
-    )
+    
+    # gzclient_launch = IncludeLaunchDescription(
+    #     PythonLaunchDescriptionSource(gzclient_launch_path)
+    # )
 
-    #launch gazibo 
-    gzserver_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(gzserver_launch_path),
-        launch_arguments={
-            'world': worldfile,
-            # 'pause' : 'true'
-        }.items()
+    # #launch gazibo 
+    # gzserver_launch = IncludeLaunchDescription(
+    #     PythonLaunchDescriptionSource(gzserver_launch_path),
+    #     launch_arguments={
+    #         'world': worldfile,
+    #         # 'pause' : 'true'
+    #     }.items()
+    # )
+    
+    gazebo = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(
+                get_package_share_directory('ros_gz_sim'), 'launch', 'gz_sim.launch.py')]),
+                launch_arguments={'gz_args': ['-r -v4 ', worldfile], 'on_exit_shutdown': 'true'}.items()
     )
+    
     robot_state_publisher_node = launch_ros.actions.Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -83,12 +96,12 @@ def generate_launch_description():
     )
 
     spawn_entity = launch_ros.actions.Node(
-        package='gazebo_ros',
-        executable='spawn_entity.py',
+        package='ros_gz_sim',
+        executable='create',
         arguments=[
             '-entity', 'shanti',
-            '-topic', 'robot_description',
-            '-x', '-31.0', '-y', '23.0', '-z', '1.0'#'-x', '13', '-y', '35', '-z', '1',  # orig..x,y = 0.  Position (x, y, z)... oakland: '-x', '-20.26', '-y', '24.8', '-z', '3',
+            '-topic', 'robot_description', # '-x', '-31.0', '-y', '23.0', '-z', '1.0
+            '-x', '2.0', '-y', '3.0', '-z', '1.0',#'-x', '13', '-y', '35', '-z', '1',  # orig..x,y = 0.  Position (x, y, z)... oakland: '-x', '-20.26', '-y', '24.8', '-z', '3',
             '-R', '0.0', '-P', '0.0', '-Y', '1.58093'   # Orientation (roll, pitch, yaw 1.58093)  in radians
         ],
         output='screen'
@@ -134,6 +147,7 @@ def generate_launch_description():
     localization_node = IncludeLaunchDescription(
     PythonLaunchDescriptionSource(
         os.path.join(
+            'localization',
             get_package_share_directory('localization_bringup'),
             'launch',
             'dual_ekf_navsat.launch.py'
@@ -195,6 +209,45 @@ def generate_launch_description():
         package='rosapi',
         executable='rosapi_node',
     )
+    
+    diff_drive_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["diff_drive_controller"],
+    )
+
+    joint_broad_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["joint_state_broadcaster"],
+    )
+
+    delayed_diff_drive_spawner = TimerAction(
+        period=15.0,  
+        actions=[diff_drive_spawner]
+    )
+
+    delayed_joint_broad_spawner = TimerAction(
+        period=15.0, 
+        actions=[joint_broad_spawner]
+    )
+    
+    bridge_params = os.path.join(
+        get_package_share_directory('shanti_bringup'),
+        'config',
+        'ros_gz_bridge.yaml'
+    )
+
+    ros_gz_bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=[
+            '--ros-args',
+            '-p',
+            f'config_file:={bridge_params}',
+        ],
+        output='screen',
+    )
 
 
     return launch.LaunchDescription([
@@ -206,33 +259,38 @@ def generate_launch_description():
                                             description='Absolute path to rviz config file'),
         teleop_arg,
         
-        gzclient_launch,
-        gzserver_launch,
-        joint_state_publisher_node,
+        # ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r /cmd_vel:=/diff_drive_controller/cmd_vel_unstamped
+        
+        gazebo,
         #joint_state_publisher_gui_node,
         robot_state_publisher_node,
+        joint_state_publisher_node,
         spawn_entity,
 
         #joystick nodes and the gps logger nodes
-
-        joy_node,
-        joy2twist_node,
-        joystick_gps_logger_node,
+        # joy_node,
+        # joy2twist_node,
+        # joystick_gps_logger_node,
 
         rviz_node,
-        localization_node,
+        # localization_node,
         
-        nav2_bringup_node,  
+        # nav2_bringup_node,  
         
         relay_cmd_vel,
         
-        spawn_waypoint_flags,
+        # spawn_waypoint_flags,
 
+        delayed_diff_drive_spawner,
+        delayed_joint_broad_spawner,
+        
         # Add the lane_segmentation_to_pointcloud node here
-        lane_segmentation_node,
+        # lane_segmentation_node,
 
         #run the AI lane detection node. 
-        obstacle_detector_node,
+        # obstacle_detector_node,
+
+        ros_gz_bridge,
 
         # ros_websocket,
         # ros_api

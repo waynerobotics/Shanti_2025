@@ -311,7 +311,7 @@
   </gazebo>
 
   <gazebo reference="lidar_front_left_link">
-  <sensor type="ray" name="lidar_front_left_sensor">
+  <sensor type="gpu_lidar" name="lidar_front_left_sensor">
     <pose>0 0 0 0 0 0</pose>
     <visualize>true</visualize>
     <update_rate>10</update_rate>

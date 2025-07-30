@@ -14,6 +14,7 @@ setup(
         (os.path.join('share', package_name, 'launch'), glob('launch/*.py')),
         (os.path.join('share', package_name, 'description'), glob('description/*')),
         (os.path.join('share', package_name, 'rviz'), glob('rviz/*')),
+        (os.path.join('share', 'shanti_base', 'config'), glob('config/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
