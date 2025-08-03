@@ -15,6 +15,9 @@
   <xacro:property name="lidar_radius" value="0.05" />
   <xacro:property name="lidar_width" value="0.04" />
 
+  <xacro:include filename="$(find shanti_base)/description/inertial_macros.xacro" />
+  <xacro:include filename="$(find shanti_base)/description/lidar.xacro" />
+
   <!-- Define inertial property macros  -->
   <xacro:macro name="box_inertia" params="m w h d">
     <inertial>
