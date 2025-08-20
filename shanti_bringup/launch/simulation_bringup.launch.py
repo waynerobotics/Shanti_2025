@@ -10,6 +10,8 @@ import os
 
 def generate_launch_description():
 
+#ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r /cmd_vel:=/diff_cont/cmd_vel_unstamped
+
     print ('**********main configuration***********')
     print ('assuming ros2 workspace is ros2_wp')
     #get the home directory
@@ -107,28 +109,43 @@ def generate_launch_description():
         output='screen'
     )   
 
+
+    joy_params = os.path.join(get_package_share_directory('shanti_bringup'),'/config/joystick.yaml')
     # Launch joystick node conditionally based on teleop parameter
     joy_node = launch_ros.actions.Node(
         package='joy',
         executable='joy_node',
+        parameters=[joy_params],
+        condition=launch.conditions.IfCondition(LaunchConfiguration('teleop'))
+    )
+
+    joy2twist_node = Node(
+        package='teleop_twist_joy', 
+        executable='teleop_node',
+        name = 'teleop_node',
+        parameters=[joy_params],
+        remappings=[('/cmd_vel', '/diff_cont/cmd_vel_unstamped')],
         condition=launch.conditions.IfCondition(LaunchConfiguration('teleop'))
     )
 
     # Launch joystick axis to twist message conversion node conditionally
-    joy2twist_node = launch_ros.actions.Node(
-        package='joystick2base',
-        executable='joy2twist',
+    # joy2twist_node = launch_ros.actions.Node(
+    #     package='joystick2base',
+    #     executable='joy2twist',
         
-        # Remap to Gazebo diff drive topic
-        remappings=[
-            ('/turtle1/cmd_vel', '/demo/cmd_vel')
-        ],
-        parameters=[{
-            'linear_axis': 1, 
-            'angular_axis': 0, # 0 for yoke, 3 for joystick
-        }],
-        condition=launch.conditions.IfCondition(LaunchConfiguration('teleop'))
-    )
+    #     # Remap to Gazebo diff drive topic
+    #     remappings=[
+    #         ('/turtle1/cmd_vel', '/demo/cmd_vel')
+    #     ],
+    #     parameters=[{
+    #         'linear_axis': 1, 
+    #         'angular_axis': 0, # 0 for yoke, 3 for joystick
+    #     }],
+    #     condition=launch.conditions.IfCondition(LaunchConfiguration('teleop'))
+    # )
+
+
+    
     # Launch a node that will record the joystick button presses as GPS coordinates
     # This node will log the GPS coordinates when the joystick button is pressed 
     joystick_gps_logger_node = launch_ros.actions.Node(
@@ -213,22 +230,22 @@ def generate_launch_description():
     diff_drive_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["diff_drive_controller"],
+        arguments=["diff_cont"],
     )
 
     joint_broad_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster"],
+        arguments=["joint_broad"],
     )
 
     delayed_diff_drive_spawner = TimerAction(
-        period=15.0,  
+        period=10.0,  
         actions=[diff_drive_spawner]
     )
 
     delayed_joint_broad_spawner = TimerAction(
-        period=15.0, 
+        period=10.0, 
         actions=[joint_broad_spawner]
     )
     
@@ -249,6 +266,11 @@ def generate_launch_description():
         output='screen',
     )
 
+    ros_gz_image_bridge = Node(
+        package="ros_gz_image",
+        executable="image_bridge",
+        arguments=["/camera/image_raw"]
+    )
 
     return launch.LaunchDescription([
         launch.actions.DeclareLaunchArgument(name='gui', default_value='True',
@@ -259,7 +281,7 @@ def generate_launch_description():
                                             description='Absolute path to rviz config file'),
         teleop_arg,
         
-        # ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r /cmd_vel:=/diff_drive_controller/cmd_vel_unstamped
+        # ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r /cmd_vel:=/diff_cont/cmd_vel_unstamped
         
         gazebo,
         #joint_state_publisher_gui_node,
@@ -267,23 +289,23 @@ def generate_launch_description():
         joint_state_publisher_node,
         spawn_entity,
 
-        #joystick nodes and the gps logger nodes
-        # joy_node,
-        # joy2twist_node,
-        # joystick_gps_logger_node,
-
         rviz_node,
         # localization_node,
         
         # nav2_bringup_node,  
         
-        relay_cmd_vel,
+        # relay_cmd_vel,
         
         # spawn_waypoint_flags,
 
         delayed_diff_drive_spawner,
         delayed_joint_broad_spawner,
-        
+
+        #joystick nodes and the gps logger nodes
+        joy_node,
+        joy2twist_node,
+        joystick_gps_logger_node,
+
         # Add the lane_segmentation_to_pointcloud node here
         # lane_segmentation_node,
 
@@ -291,6 +313,7 @@ def generate_launch_description():
         # obstacle_detector_node,
 
         ros_gz_bridge,
+        ros_gz_image_bridge,
 
         # ros_websocket,
         # ros_api

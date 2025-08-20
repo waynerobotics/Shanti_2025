@@ -229,7 +229,6 @@ def generate_launch_description():
         remappings=[('/cmd_vel', '/diff_cont/cmd_vel_unstamped')],
         condition=IfCondition(enable_teleop)
     )
-    
     # Return the launch description
     return launch.LaunchDescription([
         # Launch arguments

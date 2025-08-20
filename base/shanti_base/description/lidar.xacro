@@ -3,25 +3,23 @@
 
   <joint name="laser_joint" type="fixed">
     <parent link="base_link"/>
-    <child link ="laser_frame"/>
-    <origin xyz="0 0 ${base_height + lidar_width}"/>
+    <child link ="lidar_link"/>
+    <origin xyz="0 0 ${base_height/2 + lidar_length}"/>
   </joint>
 
-  <link name="laser_frame">
+  <link name="lidar_link">
     <visual name="laser_visual">
       <geometry>
-          <cylinder length="${lidar_width}" radius="${lidar_radius}" />
+          <cylinder length="${lidar_length}" radius="${lidar_radius}" />
       </geometry>
-      <material name="blue"/>
-      <!-- <material>
-        <ambient>1 0 0 1</ambient>
-        <diffuse>1 0 0 1</diffuse>
-      </material> -->
+      <material name="Red">
+          <color rgba="0.7 0.5 0.5 1.0" />
+      </material>
     </visual>
 
     <collision name="laser_collision">
       <geometry>
-          <cylinder length="${lidar_width}" radius="${lidar_radius}" />
+          <cylinder length="${lidar_length}" radius="${lidar_radius}" />
       </geometry>
     </collision>
     
@@ -31,7 +29,7 @@
 
   </link>
 
-<gazebo reference="laser_frame">
+<gazebo reference="lidar_link">
   <sensor name="laser" type="gpu_lidar">
     <pose>0 0 0 0 0 0</pose>
     <update_rate>10</update_rate>
@@ -51,7 +49,7 @@
     </lidar>
 
     <topic>scan</topic>
-    <gz_frame_id>laser_frame</gz_frame_id>
+    <gz_frame_id>lidar_link</gz_frame_id>
 
   </sensor>
 </gazebo>

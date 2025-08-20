@@ -3,13 +3,13 @@ controller_manager:
     update_rate: 50
     use_sim_time: true
 
-    joint_state_broadcaster:
+    joint_broad:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    diff_drive_controller:
+    diff_cont:
       type: diff_drive_controller/DiffDriveController
 
-diff_drive_controller:
+diff_cont:
   ros__parameters:
     left_wheel_names: ["drivewhl_l1_joint", "drivewhl_l2_joint", "drivewhl_l3_joint"]
     right_wheel_names: ["drivewhl_r1_joint", "drivewhl_r2_joint", "drivewhl_r3_joint"]
