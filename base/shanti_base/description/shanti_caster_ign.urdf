@@ -3,18 +3,18 @@
 <robot name="shanti" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <!-- Define robot constants in meters-->
-  <xacro:property name="base_width" value="0.6604" />
-  <xacro:property name="base_length" value="0.9144" />
-  <xacro:property name="base_height" value="0.635" />
+  <xacro:property name="base_width" value="0.5" />
+  <xacro:property name="base_length" value="0.9" />
+  <xacro:property name="base_height" value="0.4" />
 
   <xacro:property name="wheel_radius" value="0.1016" />
   <xacro:property name="wheel_width" value="0.0762" />
   <xacro:property name="wheel_ygap" value="0.025" />
-  <xacro:property name="wheel_zoff" value="0.3" />
+  <xacro:property name="wheel_zoff" value="0.21" />
   <xacro:property name="wheel_xoff" value="0.2921" />
 
-  <xacro:property name="caster_xoff" value="0.14" />
-  <xacro:property name="caster_radius" value="0.2" />
+  <xacro:property name="caster_xoff" value="0.16" />
+  <xacro:property name="caster_radius" value="0.1" />
 
   <xacro:property name="lidar_radius" value="0.1" />
   <xacro:property name="lidar_length" value="0.08" />
@@ -23,16 +23,17 @@
   <xacro:property name="imu_width" value="0.1" />
   <xacro:property name="imu_height" value="0.05" />
 
-  <xacro:property name="camera_length" value="0.05" />
+  <xacro:property name="camera_length" value="0.1" />
   <xacro:property name="camera_width" value="0.05" />
-  <xacro:property name="camera_height" value="0.05" />
+  <xacro:property name="camera_height" value="0.1" />
+  <xacro:property name="camera_xoff" value="0" />
 
   <xacro:property name="gps_length" value="0.1" />
   <xacro:property name="gps_width" value="0.1" />
   <xacro:property name="gps_height" value="0.1" />
 
   <xacro:include filename="$(find shanti_base)/description/inertia/inertial_macros.xacro" />
-  <xacro:include filename="$(find shanti_base)/description/ros2_control/ros2_control_6w.xacro" />
+  <xacro:include filename="$(find shanti_base)/description/ros2_control/ros2_control_caster.xacro" />
 
   <xacro:include filename="$(find shanti_base)/description/sensors/lidar.xacro" />
   <xacro:include filename="$(find shanti_base)/description/sensors/imu.xacro" />
@@ -68,13 +69,9 @@
 
  <!-- Wheels  -->
   <xacro:diff_wheel prefix="drivewhl_l1" x_reflect="-1" y_reflect="1"/>
-  <xacro:diff_wheel prefix="drivewhl_l2" x_reflect="0" y_reflect="1" />
-  <xacro:diff_wheel prefix="drivewhl_l3" x_reflect="1" y_reflect="1" />
   <xacro:diff_wheel prefix="drivewhl_r1" x_reflect="-1" y_reflect="-1" />
-  <xacro:diff_wheel prefix="drivewhl_r2" x_reflect="0" y_reflect="-1" />
-  <xacro:diff_wheel prefix="drivewhl_r3" x_reflect="1" y_reflect="-1" />
+  <xacro:caster_wheel prefix="caster_front" x_reflect="1" />
 
-<!-- GPS Sensor (testing)-->
 
 <link name="gps_link">
   <visual>
@@ -93,11 +90,11 @@
 </link>
 
 
-  <joint name="gps_joint" type="fixed">
-    <parent link="base_link"/>
-    <child link ="gps_link"/>
-    <origin xyz="0.1 0 ${base_height/2 + gps_height/2}"/>
-  </joint>
+<joint name="gps_joint" type="fixed">
+  <parent link="base_link"/>
+  <child link ="gps_link"/>
+  <origin xyz="0.1 0 ${base_height/2 + gps_height/2}"/>
+</joint>
 
 
 <gazebo reference="gps_link">
@@ -127,5 +124,4 @@
   <gz_frame_id>gps_link</gz_frame_id>
 
 </gazebo>
-
 </robot>

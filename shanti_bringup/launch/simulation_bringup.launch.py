@@ -30,38 +30,13 @@ def generate_launch_description():
 
     # get the urdf model file
     pkg_share = launch_ros.substitutions.FindPackageShare(package='shanti_base').find('shanti_base')
-    default_model_path = os.path.join(pkg_share, 'description/shanti_6w_ign.urdf')
+    default_model_path = os.path.join(pkg_share, 'description/shanti_caster_ign.urdf')
     default_rviz_config_path = os.path.join(pkg_share, 'rviz/rviz.rviz')
     print (default_model_path)
-    # Find Gazebo files
-    
-    # gazebo_share = f'/opt/ros/{ros_distro}/share/gazebo_ros'
-    # print (gazebo_share)
-    # gzclient_launch_path = os.path.join(gazebo_share, 'launch/gzclient.launch.py')
-    # gzserver_launch_path = os.path.join(gazebo_share, 'launch/gzserver.launch.py')
-    
-    # print(gzclient_launch_path)
-    # print(gzserver_launch_path)
-    
-   # Find the world file
-    #worldfile = f'{home_dir}ros2_ws/src/Shanti_2025/simulation/worlds/map1.world'
-    
+
     worldfile = f'{home_dir}/ros2_ws/src/Shanti_2025/simulation/worlds/empty.world'
     print (worldfile)
     print ('****************************')
-    
-    # gzclient_launch = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(gzclient_launch_path)
-    # )
-
-    # #launch gazibo 
-    # gzserver_launch = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(gzserver_launch_path),
-    #     launch_arguments={
-    #         'world': worldfile,
-    #         # 'pause' : 'true'
-    #     }.items()
-    # )
     
     gazebo = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([os.path.join(
@@ -283,13 +258,13 @@ def generate_launch_description():
         
         # ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r /cmd_vel:=/diff_cont/cmd_vel_unstamped
         
-        gazebo,
         #joint_state_publisher_gui_node,
         robot_state_publisher_node,
         joint_state_publisher_node,
         spawn_entity,
 
         rviz_node,
+        gazebo,
         # localization_node,
         
         # nav2_bringup_node,  

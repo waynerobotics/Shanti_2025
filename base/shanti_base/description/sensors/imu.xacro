@@ -5,19 +5,21 @@
   <joint name="imu_joint" type="fixed">
     <parent link="base_link"/>
     <child link ="imu_link"/>
-    <origin xyz="0.2 0 ${base_height/2 + imu_height / 2}"/>
+    <origin xyz="0 0 ${base_height/2 + lidar_length / 2}"/>
   </joint>
 
   <link name="imu_link">
-    <visual>
+    <!-- <visual>
       <geometry>
         <box size="${imu_length} ${imu_width} ${imu_height}" />
       </geometry>
       <material name="orange"/>
-    </visual>
+    </visual> -->
 
-    <xacro:box_inertia m="0.1" w="0.1" d="0.1" h="0.1" />
-  
+    <!-- <xacro:inertial_box mass="0.1" x="${imu_length}" y="${imu_width}" z="${imu_height}">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:inertial_box> -->
+    
   </link>
 
   <gazebo reference="imu_link">
